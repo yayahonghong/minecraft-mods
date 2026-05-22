@@ -1,0 +1,22 @@
+{
+  "qq": {
+    "enabled": true,
+    "api_url": "http://localhost:3000",
+    "token": "",
+    "group_id": 0,
+    "callback_port": 28080,
+    "command_prefix": "#",
+    "admin_qq": []
+  },
+  "events": {
+    "join": { "enabled": true, "message": "🟢 {player} 加入了游戏" },
+    "quit": { "enabled": true, "message": "🔴 {player} 退出了游戏" },
+    "death": { "enabled": true, "message": "💀 {death_message}" },
+    "advancement": { "enabled": true, "message": "🏆 {player} 获得了成就 {advancement}" },
+    "chat": { "enabled": false, "message": "💬 {player}: {message}" },
+    "server_start": { "enabled": true, "message": "✅ 服务器已启动" },
+    "server_stop": { "enabled": true, "message": "🛑 服务器即将关闭" },
+    "op_change": { "enabled": true, "message": "👑 {player} 的 OP 状态已变更为 {status}" }
+  },
+  "excluded_players": []
+}

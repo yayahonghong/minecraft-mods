@@ -1,0 +1,26 @@
+{
+    "schemaVersion": 1,
+    "id": "serverhelper",
+    "version": "${version}",
+    "name": "ServerHelper",
+    "description": "Multi-function server management mod with QQ integration.",
+    "authors": ["YSH"],
+    "contact": {},
+    "license": "MIT",
+    "icon": "assets/serverhelper/icon.png",
+    "environment": "server",
+    "entrypoints": {
+        "main": [
+            "com.ysh.serverhelper.ServerHelperMod"
+        ]
+    },
+    "mixins": [
+        "serverhelper.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=0.18.5",
+        "minecraft": "~26.1",
+        "java": ">=25",
+        "fabric-api": "*"
+    }
+}
