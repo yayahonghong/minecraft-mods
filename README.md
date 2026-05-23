@@ -7,6 +7,7 @@
 | 模组 | 目录 | 说明 |
 |---|---|---|
 | ServerHelper | `serverhelper/` | 服务器管理模组，集成 QQ 通知与远程命令 |
+| NoCreeperGrief | `nocreepergrief/` | 阻止苦力怕爆炸破坏地形，视觉改为真实烟花火箭效果 |
 
 ## 构建
 
@@ -15,6 +16,11 @@
 ```
 
 各模组 JAR 输出在对应子目录的 `build/libs/` 下。
+
+也可单独构建子模组：
+```bash
+./gradlew --no-daemon --console=plain :子模块名:build
+```
 
 ## 环境要求
 
