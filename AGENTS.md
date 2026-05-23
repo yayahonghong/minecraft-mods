@@ -4,7 +4,7 @@
 
 ## 项目结构
 
-多模组 Fabric 父工程，当前包含子模组 `serverhelper` 和 `nocreepergrief`。
+多模组 Fabric 父工程，当前包含子模组 `serverhelper`、`nocreepergrief` 和 `smartplace`。
 
 ```
 minecraft-mods/
@@ -20,6 +20,10 @@ minecraft-mods/
 │   ├── build.gradle          # fabric-loom 插件, minecraft/fabric-api 依赖
 │   ├── src/main/java/        # 模组代码（3 个 Mixin 文件）
 │   └── src/main/resources/   # fabric.mod.json + mixins.json
+├── smartplace/
+│   ├── build.gradle          # fabric-loom 插件, minecraft/fabric-api 依赖
+│   ├── src/main/java/        # 模组代码
+│   └── src/main/resources/   # fabric.mod.json + mixins.json
 └── run/                      # Minecraft 开发运行时（Loom 期望在根目录）
 ```
 
@@ -29,6 +33,7 @@ minecraft-mods/
 |---|---|---|
 | ServerHelper | `serverhelper/` | QQ 通知、命令、服务器管理 |
 | NoCreeperGrief | `nocreepergrief/` | 阻止苦力怕爆炸破坏地形，视觉改为真实烟花火箭效果 |
+| SmartPlace | `smartplace/` | 智能方块放置，根据玩家面朝方向自动放置方块 |
 
 ## 构建与测试
 
@@ -66,6 +71,17 @@ minecraft-mods/
   - 两段烟花：红/金/白大球 + 青/紫/绿爆裂，带拖尾闪烁
 - **Accessor** (`FireworkRocketEntityAccessor`): 访问 `life`/`lifetime` 私有字段
 - **伤害取消** (`FireworkRocketEntityMixin`): 拦截 `dealExplosionDamage`，避免烟花叠加伤害
+- **无配置文件**，功能全部内置于代码
+
+## SmartPlace 模组架构
+
+- **入口**: `com.ysh.smartplace.SmartPlaceMod` (ModInitializer)
+- **核心 Mixin** (`ServerPlayerGameModeMixin`): `@ModifyVariable` 拦截 `ServerPlayerGameMode#useItemOn()` 的参数 `BlockHitResult`
+  - 根据 `player.getLookAngle()` 重新计算放置方向
+  - 使用 `BlockHitResult.withDirection()` 创建修改后的 hit result
+- **DirectionHelper**: 工具类，从视角向量确定 `Direction`
+- **SmartPlaceState**: 每个玩家独立的开关状态（`ConcurrentHashMap<UUID, Boolean>`）
+- **命令**: `/smartplace toggle|status`（默认关闭）
 - **无配置文件**，功能全部内置于代码
 
 ## 添加新模组
