@@ -1,0 +1,25 @@
+{
+    "schemaVersion": 1,
+    "id": "smartplace",
+    "version": "${version}",
+    "name": "SmartPlace",
+    "description": "根据玩家面朝方向自动放置方块，无需精准对准特定面。",
+    "authors": ["YSH"],
+    "contact": {},
+    "license": "MIT",
+    "environment": "server",
+    "entrypoints": {
+        "main": [
+            "com.ysh.smartplace.SmartPlaceMod"
+        ]
+    },
+    "mixins": [
+        "smartplace.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=0.18.5",
+        "minecraft": "~26.1",
+        "java": ">=25",
+        "fabric-api": "*"
+    }
+}

@@ -16,3 +16,4 @@ rootProject.name = 'minecraft-mods'
 
 include 'serverhelper'
 include 'nocreepergrief'
+include 'smartplace'
