@@ -26,7 +26,7 @@ run/
 .cache/
 
 # Config (real credentials)
-config/serverhelper.json
+serverhelper/config/serverhelper.json
 
 # Test files (compiled inside build/)
 Test.java
