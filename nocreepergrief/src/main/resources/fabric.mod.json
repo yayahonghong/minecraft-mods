@@ -1,0 +1,25 @@
+{
+    "schemaVersion": 1,
+    "id": "nocreepergrief",
+    "version": "${version}",
+    "name": "NoCreeperGrief",
+    "description": "Prevents creeper explosions from destroying terrain; replaces visual with firework particles.",
+    "authors": ["YSH"],
+    "contact": {},
+    "license": "MIT",
+    "environment": "server",
+    "entrypoints": {
+        "main": [
+            "com.ysh.nocreepergrief.NoCreeperGriefMod"
+        ]
+    },
+    "mixins": [
+        "nocreepergrief.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=0.18.5",
+        "minecraft": "~26.1",
+        "java": ">=25",
+        "fabric-api": "*"
+    }
+}
