@@ -1,0 +1,12 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "com.ysh.onlinemodefix.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "ServerLoginMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
