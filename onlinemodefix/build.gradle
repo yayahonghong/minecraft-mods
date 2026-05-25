@@ -30,3 +30,11 @@ jar {
         rename { "${it}_$projectName" }
     }
 }
+
+loom {
+    runs {
+        client {
+            programArg "--username=MaKaBaKa"
+        }
+    }
+}
