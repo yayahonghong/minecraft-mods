@@ -4,7 +4,6 @@
     "api_url": "http://localhost:3000",
     "token": "",
     "group_id": 0,
-    "callback_port": 28080,
     "command_prefix": "#",
     "admin_qq": []
   },

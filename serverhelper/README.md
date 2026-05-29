@@ -8,13 +8,11 @@
 - **QQ 远程命令** — 在 QQ 群发 `#list`、`#tps`、`#status`、`#say`、`#cmd` 管理服务器
 - **游戏内管理** — `/helper list`、`/helper toggle <event>`、`/helper test`、`/helper reload`
 - **原生中文支持** — 模组内置官方 `zh_cn.json`，成就/死亡消息均为中文
-- **HMAC SHA1 签名** — QQ 回调端口使用签名验证，防伪造请求
-
 ## 架构
 
 ```
 Minecraft Server ──POST /send_group_msg──→ NapCat HTTP Server ──→ QQ 群
-Minecraft Server ←←POST /qq/callback←←── NapCat HTTP Client ←←── QQ 群消息
+Minecraft Server ──────WebSocket──────────→ NapCat WS Server ←←──── QQ 群消息
 ```
 
 ## 环境要求
@@ -33,7 +31,6 @@ Minecraft Server ←←POST /qq/callback←←── NapCat HTTP Client ←←�
     "api_url": "http://localhost:3000",
     "token": "",
     "group_id": 0,
-    "callback_port": 28080,
     "command_prefix": "#",
     "admin_qq": []
   },
@@ -83,23 +80,23 @@ Minecraft Server ←←POST /qq/callback←←── NapCat HTTP Client ←←�
 }
 ```
 
-### HTTP 客户端（QQ 消息 → Mod 回调）
+### WebSocket 服务器（QQ 消息 → Mod 接收）
 
 ```json
 {
   "network": {
-    "httpClients": [{
-      "name": "serverhelper-callback",
-      "url": "http://127.0.0.1:28080/qq/callback",
-      "messagePostFormat": "string",
-      "reportSelfMessage": false,
+    "wsServers": [{
+      "name": "serverhelper-ws",
+      "enable": true,
+      "port": 3001,
+      "host": "0.0.0.0",
       "token": "<你的Token>"
     }]
   }
 }
 ```
 
-注意: NapCat 使用 HMAC SHA1 签名（`X-Signature` header）进行鉴权，Mod 会自动校验签名。
+注意：NapCat 的 HTTP 和 WebSocket 通常需要分开端口运行。如需通过同一隧道访问，可在 NapCat 服务器上使用 nginx/OpenResty 反向代理，按路径 `/ws` 转发到 WS 端口。
 
 ## QQ 命令
 

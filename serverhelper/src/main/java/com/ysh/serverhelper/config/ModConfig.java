@@ -22,7 +22,6 @@ public class ModConfig {
         private String api_url = "http://localhost:3000";
         private String token = "";
         private long group_id = 0;
-        private int callback_port = 8080;
         private String command_prefix = "#";
         private List<Long> admin_qq = new ArrayList<>();
 
@@ -34,8 +33,6 @@ public class ModConfig {
         public void setToken(String token) { this.token = token; }
         public long getGroupId() { return group_id; }
         public void setGroupId(long group_id) { this.group_id = group_id; }
-        public int getCallbackPort() { return callback_port; }
-        public void setCallbackPort(int callback_port) { this.callback_port = callback_port; }
         public String getCommandPrefix() { return command_prefix; }
         public void setCommandPrefix(String command_prefix) { this.command_prefix = command_prefix; }
         public List<Long> getAdminQq() { return admin_qq; }
