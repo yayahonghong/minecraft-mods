@@ -1,0 +1,15 @@
+[sftp]
+host = "your-server.com"
+port = 22
+username = "mcuser"
+private_key = "~/.ssh/id_ed25519"
+
+[remote]
+base_path = "/opt/minecraft/server"
+worlds = ["world", "world_nether", "world_the_end"]
+
+[r2]
+account_id = "your-account-id"
+bucket_name = "mc-backups"
+access_key_id = "CHANGEME"
+secret_access_key = "CHANGEME"

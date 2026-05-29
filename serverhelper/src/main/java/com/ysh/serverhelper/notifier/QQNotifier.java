@@ -13,7 +13,9 @@ public class QQNotifier implements Notifier {
     private final ModConfig.QQConfig config;
 
     public QQNotifier(ModConfig.QQConfig config) {
-        this.client = HttpClient.newHttpClient();
+        this.client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
         this.config = config;
     }
 
