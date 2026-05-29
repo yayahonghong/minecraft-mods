@@ -1,3 +1,4 @@
+import logging
 import os
 import posixpath
 import stat
@@ -7,6 +8,8 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import paramiko
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -37,7 +40,8 @@ def _scan_dir(sftp, base: str, prefix: str) -> dict[str, RemoteFileInfo]:
     full_path = posixpath.join(base, prefix) if prefix else base
     try:
         entries = sftp.listdir_attr(full_path)
-    except FileNotFoundError:
+    except OSError as e:
+        logger.warning("Cannot list directory %s: %s", full_path, e)
         return results
     for attr in entries:
         rel_path = f"{prefix}/{attr.filename}" if prefix else attr.filename
