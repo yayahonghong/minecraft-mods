@@ -1,8 +1,12 @@
 import os
-import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib  # Python < 3.11
 
 
 class ConfigError(Exception):
