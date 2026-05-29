@@ -11,8 +11,11 @@ worlds = ["world", "world_nether", "world_the_end"]
 [r2]
 # Account ID（必需，在 R2 后台 Overview 页面可找到）
 account_id = "your-account-id"
-# 自定义域名（可选，仅用于公开访问，S3 API 仍走 account_id 端点）
+# 自定义域名（可选，S3 API 仍走 account_id 端点）
 # endpoint_url = "https://r2.yourdomain.com"
 bucket_name = "mc-backups"
 access_key_id = "CHANGEME"
 secret_access_key = "CHANGEME"
+
+[backup]
+keep = 7    # 保留最近 7 份快照，0 = 不清理

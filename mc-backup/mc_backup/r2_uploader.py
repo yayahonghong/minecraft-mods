@@ -1,6 +1,9 @@
 import boto3
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional
+
+logger = __import__("logging").getLogger(__name__)
 
 
 def create_r2_client(cfg):
@@ -25,11 +28,40 @@ def _r2_key(snapshot: str, rel_path: str) -> str:
 def upload_changed_files(
     client, bucket: str, snapshot: str,
     staging_dir: Path, changed: set[str],
+    max_workers: int = 5,
 ) -> None:
-    for rel_path in changed:
-        key = _r2_key(snapshot, rel_path)
-        local = staging_dir / rel_path
-        client.upload_file(str(local), bucket, key)
+    if not changed:
+        return
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futs = {}
+        for rel_path in changed:
+            key = _r2_key(snapshot, rel_path)
+            local = staging_dir / rel_path
+            futs[pool.submit(client.upload_file, str(local), bucket, key)] = rel_path
+        for fut in as_completed(futs):
+            fut.result()
+
+
+def copy_unchanged_files(
+    client, bucket: str, snapshot: str,
+    last_snapshot: Optional[str], unchanged: set[str],
+    max_workers: int = 10,
+) -> None:
+    if not last_snapshot or not unchanged:
+        return
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futs = {}
+        for rel_path in unchanged:
+            src = _r2_key(last_snapshot, rel_path)
+            dst = _r2_key(snapshot, rel_path)
+            futs[pool.submit(
+                client.copy_object,
+                Bucket=bucket,
+                CopySource={"Bucket": bucket, "Key": src},
+                Key=dst,
+            )] = rel_path
+        for fut in as_completed(futs):
+            fut.result()
 
 
 def delete_files(
@@ -42,3 +74,33 @@ def delete_files(
     client.delete_objects(Bucket=bucket, Delete={"Objects": keys})
 
 
+def _list_all_objects(client, bucket: str, prefix: str) -> list[dict]:
+    keys: list[dict] = []
+    paginator = client.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            keys.append({"Key": obj["Key"]})
+    return keys
+
+
+def _list_all_prefixes(client, bucket: str) -> list[str]:
+    prefixes: list[str] = []
+    paginator = client.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket, Prefix="backups/", Delimiter="/"):
+        for p in page.get("CommonPrefixes", []):
+            prefixes.append(p["Prefix"])
+    return prefixes
+
+
+def delete_old_snapshots(
+    client, bucket: str, keep: int,
+) -> None:
+    if keep <= 0:
+        return
+    prefixes = _list_all_prefixes(client, bucket)
+    prefixes.sort()
+    to_delete = prefixes[:-keep] if len(prefixes) > keep else []
+    for prefix in to_delete:
+        keys = _list_all_objects(client, bucket, prefix)
+        if keys:
+            client.delete_objects(Bucket=bucket, Delete={"Objects": keys})

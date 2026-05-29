@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""从 R2 backups/latest/ 恢复 Minecraft 存档到服务器"""
+"""从 R2 快照恢复 Minecraft 存档到服务器"""
 
 import logging
 import sys
@@ -9,7 +9,6 @@ from mc_backup.config import load_config, ConfigError
 from mc_backup.r2_uploader import create_r2_client
 from mc_backup.sftp_client import connect_sftp
 
-SNAPSHOT = "latest"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -18,9 +17,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def download_snapshot(client, bucket: str, dest: Path) -> None:
+def list_snapshots(client, bucket: str) -> list[str]:
     paginator = client.get_paginator("list_objects_v2")
-    prefix = f"backups/{SNAPSHOT}/"
+    snapshots: list[str] = []
+    for page in paginator.paginate(Bucket=bucket, Prefix="backups/", Delimiter="/"):
+        for p in page.get("CommonPrefixes", []):
+            snapshots.append(p["Prefix"].removeprefix("backups/").removesuffix("/"))
+    return sorted(snapshots, reverse=True)
+
+
+def download_snapshot(client, bucket: str, snapshot: str, dest: Path) -> None:
+    paginator = client.get_paginator("list_objects_v2")
+    prefix = f"backups/{snapshot}/"
     count = 0
     for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
         for obj in page.get("Contents", []):
@@ -59,11 +67,6 @@ def _upload_dir(sftp, local: Path, remote: str) -> None:
 
 
 def main() -> None:
-    confirm = input(f"从 R2 backups/{SNAPSHOT}/ 恢复到服务器？此操作将覆盖服务器上的 world 文件 [y/N] ")
-    if confirm.lower() != "y":
-        print("已取消")
-        return
-
     try:
         cfg = load_config(Path("config.toml"))
     except ConfigError as e:
@@ -71,9 +74,43 @@ def main() -> None:
         sys.exit(1)
 
     r2 = create_r2_client(cfg.r2)
-    dest = Path(f"restore_{SNAPSHOT}")
+    bucket = cfg.r2.bucket_name
+
+    snapshots = list_snapshots(r2, bucket)
+    if not snapshots:
+        logger.error("No snapshots found in R2")
+        sys.exit(1)
+
+    print("\nAvailable snapshots:")
+    for i, snap in enumerate(snapshots, 1):
+        print(f"  {i}. {snap}")
+
+    if len(sys.argv) > 1:
+        choice = sys.argv[1]
+        if choice in snapshots:
+            snapshot = choice
+        else:
+            logger.error("Snapshot '%s' not found", choice)
+            sys.exit(1)
+    else:
+        print(f"\n选择要恢复的快照 (1-{len(snapshots)})，或 Ctrl+C 取消:")
+        try:
+            idx = int(input("> ")) - 1
+            snapshot = snapshots[idx]
+        except (ValueError, IndexError):
+            logger.error("Invalid selection")
+            sys.exit(1)
+
+    confirm = input(f"恢复到服务器？此操作将覆盖 world 文件 [y/N] ")
+    if confirm.lower() != "y":
+        print("已取消")
+        return
+
+    logger.info("Restoring snapshot: %s", snapshot)
+    dest = Path(f"restore_{snapshot}")
     dest.mkdir(parents=True, exist_ok=True)
-    download_snapshot(r2, cfg.r2.bucket_name, dest)
+
+    download_snapshot(r2, bucket, snapshot, dest)
 
     sftp = connect_sftp(cfg.sftp)
     try:
@@ -81,7 +118,7 @@ def main() -> None:
     finally:
         sftp.close()
 
-    logger.info("恢复完成！本地临时文件保留在 %s，确认无误后可删除。", dest)
+    logger.info("Restore complete! Local files kept at %s", dest)
 
 
 if __name__ == "__main__":
