@@ -20,6 +20,7 @@ secret_access_key = "secret1"
 
 [backup]
 keep = 7
+max_storage_mb = 5000
 """
 
 def test_load_config_parses_toml(tmp_path: Path):
@@ -46,6 +47,7 @@ def test_load_config_backup_section(tmp_path: Path):
     cfg_path.write_text(TOML_CONTENT)
     cfg = load_config(cfg_path)
     assert cfg.backup.keep == 7
+    assert cfg.backup.max_storage_mb == 5000
 
 def test_load_config_not_found():
     from mc_backup.config import ConfigError

@@ -16,6 +16,7 @@ from mc_backup.sftp_client import (
 )
 from mc_backup.r2_uploader import (
     create_r2_client,
+    check_quota,
     upload_changed_files,
     copy_unchanged_files,
     delete_files,
@@ -59,6 +60,17 @@ def run_backup(
             save_manifest(new_manifest, manifest_path)
             return
 
+        logger.info("Connecting to Cloudflare R2...")
+        r2_client = create_r2_client(cfg.r2)
+        if not check_quota(r2_client, cfg.r2.bucket_name, cfg.backup.max_storage_mb):
+            save_manifest(new_manifest, manifest_path)
+            return
+
+        if dry_run:
+            logger.info("[DRY RUN] Would upload + copy %d files to backups/%s/",
+                        len(changed) + len(unchanged), now_str)
+            return
+
         stage = Path(staging_dir) if staging_dir else Path(tempfile.mkdtemp(prefix="mc-backup-"))
         try:
             if changed:
@@ -67,14 +79,6 @@ def run_backup(
             if deleted:
                 logger.warning("%d files were deleted on remote, skipping in new snapshot",
                                len(deleted))
-
-            if dry_run:
-                logger.info("[DRY RUN] Would upload + copy %d files to backups/%s/",
-                           len(changed) + len(unchanged), now_str)
-                return
-
-            logger.info("Connecting to Cloudflare R2...")
-            r2_client = create_r2_client(cfg.r2)
 
             if changed:
                 logger.info("Uploading %d files to backups/%s/...", len(changed), now_str)

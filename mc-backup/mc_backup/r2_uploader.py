@@ -92,6 +92,24 @@ def _list_all_prefixes(client, bucket: str) -> list[str]:
     return prefixes
 
 
+def check_quota(client, bucket: str, max_mb: int) -> bool:
+    """检查 R2 存储是否超过阈值，True=安全，False=超出"""
+    if max_mb <= 0:
+        return True
+    total = 0
+    paginator = client.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket):
+        for obj in page.get("Contents", []):
+            total += obj["Size"]
+    used_mb = total / (1024 * 1024)
+    if used_mb > max_mb:
+        logger.warning("R2 已用 %.0f MB，超过阈值 %d MB，跳过备份以防止扣费",
+                       used_mb, max_mb)
+        return False
+    logger.info("R2 已用 %.0f MB / 阈值 %d MB", used_mb, max_mb)
+    return True
+
+
 def delete_old_snapshots(
     client, bucket: str, keep: int,
 ) -> None:
