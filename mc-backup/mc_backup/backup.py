@@ -40,26 +40,32 @@ def run_backup(
             new_manifest.files[path] = FileInfo(size=info.size, mtime=info.mtime)
 
         old_manifest = load_manifest(manifest_path)
-        changed = diff_manifest(old_manifest, new_manifest)
-        unchanged = set(new_manifest.files.keys()) - changed
+        all_changed = diff_manifest(old_manifest, new_manifest)
+        new_keys = set(new_manifest.files.keys())
+        unchanged = new_keys - all_changed
+        deleted = set(old_manifest.files.keys()) - new_keys
+        changed = all_changed - deleted
 
-        if not changed:
+        if not all_changed:
             print("No changes detected, skipping upload.")
             save_manifest(new_manifest, manifest_path)
             return
 
         stage = Path(staging_dir) if staging_dir else Path(tempfile.mkdtemp(prefix="mc-backup-"))
         try:
-            download_files(sftp, cfg.remote.base_path, changed, stage)
+            if changed:
+                download_files(sftp, cfg.remote.base_path, changed, stage)
+            if deleted:
+                print(f"Skipping {len(deleted)} deleted files (absent from new snapshot)")
 
             if dry_run:
-                print(f"[DRY RUN] Would upload {len(changed)} changed files to backups/{now_str}/")
+                print(f"[DRY RUN] Would upload {len(changed)} new/modified + {len(unchanged)} unchanged files to backups/{now_str}/")
                 return
 
             r2_client = create_r2_client(cfg.r2)
-            upload_changed_files(r2_client, cfg.r2.bucket_name, now_str, stage, changed)
-
-            if old_manifest.backup_time:
+            if changed:
+                upload_changed_files(r2_client, cfg.r2.bucket_name, now_str, stage, changed)
+            if unchanged and old_manifest.backup_time:
                 copy_unchanged_files(
                     r2_client, cfg.r2.bucket_name, now_str,
                     old_manifest.backup_time, unchanged,
@@ -72,6 +78,6 @@ def run_backup(
                 shutil.rmtree(stage, ignore_errors=True)
 
         save_manifest(new_manifest, manifest_path)
-        print(f"Backup complete: backups/{now_str}/ ({len(changed)} files changed)")
+        print(f"Backup complete: backups/{now_str}/ ({len(changed)} new/modified, {len(deleted)} deleted)")
     finally:
         sftp.close()
