@@ -62,7 +62,9 @@ def _env_overrides(cfg: Config) -> None:
             setattr(getattr(cfg, section), attr, val)
 
 
-def load_config(path: Path) -> Config:
+def load_config(path: Path | str) -> Config:
+    if isinstance(path, str):
+        path = Path(path)
     if not path.exists():
         raise ConfigError(f"Config file not found: {path}")
     data = tomllib.loads(path.read_text(encoding="utf-8"))
