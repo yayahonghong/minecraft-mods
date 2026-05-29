@@ -26,9 +26,9 @@ public class QQCommandWSClient {
         QQCommandHandler.init(mcServer);
 
         String apiUrl = qqConfig.getApiUrl().replaceAll("/+$", "");
-        this.wsUrl = apiUrl.startsWith("https://")
+        this.wsUrl = (apiUrl.startsWith("https://")
                 ? "wss://" + apiUrl.substring(8)
-                : "ws://" + apiUrl.substring(7);
+                : "ws://" + apiUrl.substring(7)) + "/ws";
 
         if (!qqConfig.getToken().isEmpty()) {
             wsUrl += "?access_token=" + qqConfig.getToken();

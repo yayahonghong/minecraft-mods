@@ -4,7 +4,12 @@ from typing import Optional
 
 
 def create_r2_client(cfg):
-    endpoint = cfg.endpoint_url or f"https://{cfg.account_id}.r2.cloudflarestorage.com"
+    if cfg.account_id:
+        endpoint = f"https://{cfg.account_id}.r2.cloudflarestorage.com"
+    elif cfg.endpoint_url:
+        endpoint = cfg.endpoint_url
+    else:
+        raise ValueError("R2: account_id 或 endpoint_url 必须至少设置一个")
     return boto3.client(
         "s3",
         endpoint_url=endpoint,

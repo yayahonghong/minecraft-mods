@@ -9,10 +9,10 @@ base_path = "/opt/minecraft/server"
 worlds = ["world", "world_nether", "world_the_end"]
 
 [r2]
-# 方式 A：自定义域名（推荐）
-endpoint_url = "https://r2.yourdomain.com"
-# 方式 B：Account ID 拼接（如果没配自定义域名）
-# account_id = "your-account-id"
+# Account ID（必需，在 R2 后台 Overview 页面可找到）
+account_id = "your-account-id"
+# 自定义域名（可选，仅用于公开访问，S3 API 仍走 account_id 端点）
+# endpoint_url = "https://r2.yourdomain.com"
 bucket_name = "mc-backups"
 access_key_id = "CHANGEME"
 secret_access_key = "CHANGEME"
