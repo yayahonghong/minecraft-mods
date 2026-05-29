@@ -16,3 +16,6 @@ endpoint_url = "https://r2.yourdomain.com"
 bucket_name = "mc-backups"
 access_key_id = "CHANGEME"
 secret_access_key = "CHANGEME"
+
+[backup]
+keep = 7    # 保留最近 7 份快照，0 = 不清理

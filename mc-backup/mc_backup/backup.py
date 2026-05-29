@@ -23,7 +23,6 @@ def run_backup(
     cfg: Config,
     manifest_dir: Optional[Path] = None,
     staging_dir: Optional[str] = None,
-    keep: int = 0,
     dry_run: bool = False,
 ) -> None:
     if manifest_dir is None:
@@ -71,8 +70,8 @@ def run_backup(
                     old_manifest.backup_time, unchanged,
                 )
 
-            if keep > 0:
-                delete_old_snapshots(r2_client, cfg.r2.bucket_name, keep)
+            if cfg.backup.keep > 0:
+                delete_old_snapshots(r2_client, cfg.r2.bucket_name, cfg.backup.keep)
         finally:
             if not staging_dir:
                 shutil.rmtree(stage, ignore_errors=True)

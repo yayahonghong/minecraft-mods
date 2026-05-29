@@ -38,10 +38,16 @@ class R2Config:
 
 
 @dataclass
+class BackupConfig:
+    keep: int = 0
+
+
+@dataclass
 class Config:
     sftp: SFTPConfig = field(default_factory=SFTPConfig)
     remote: RemoteConfig = field(default_factory=RemoteConfig)
     r2: R2Config = field(default_factory=R2Config)
+    backup: BackupConfig = field(default_factory=BackupConfig)
 
 
 def _env_overrides(cfg: Config) -> None:
@@ -64,6 +70,7 @@ def load_config(path: Path) -> Config:
         sftp=SFTPConfig(**data.get("sftp", {})),
         remote=RemoteConfig(**data.get("remote", {})),
         r2=R2Config(**data.get("r2", {})),
+        backup=BackupConfig(**data.get("backup", {})),
     )
     _env_overrides(cfg)
     return cfg
