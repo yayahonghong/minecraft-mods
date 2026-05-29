@@ -33,19 +33,14 @@ python3 run.py --dry-run
 
 需要 Cloudflare R2 的 **Account ID**（R2 后台 Overview 页面）以及 **API 令牌**（R2 → 管理 R2 API 令牌 → 创建令牌，权限：编辑）。
 
-### Backup
-
-- `keep` — 保留最近 N 份快照，`0` 表示不自动清理
-
 ## 流程
 
 1. 连接 SFTP，扫描 world 目录下所有文件
 2. 与上次备份清单 (`.mc-backup-manifest.json`) 比对，找出新增/修改/删除的文件
 3. 从 SFTP 下载新增/修改的文件
-4. 上传到 R2 `backups/<时间戳>/` 目录
-5. 未变更的文件通过 `copy_object` 从上一份快照复制（增量秒传）
-6. 按 `keep` 策略清理过期快照
-7. 保存新的备份清单
+4. 上传到 R2 `backups/latest/` 目录（覆盖原有的）
+5. 删除远端已不存在的文件
+6. 保存新的备份清单
 
 ## 依赖
 

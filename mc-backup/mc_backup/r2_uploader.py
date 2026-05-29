@@ -32,47 +32,13 @@ def upload_changed_files(
         client.upload_file(str(local), bucket, key)
 
 
-def copy_unchanged_files(
+def delete_files(
     client, bucket: str, snapshot: str,
-    last_snapshot: Optional[str], unchanged: set[str],
+    rel_paths: set[str],
 ) -> None:
-    if not last_snapshot:
+    if not rel_paths:
         return
-    for rel_path in unchanged:
-        src = _r2_key(last_snapshot, rel_path)
-        dst = _r2_key(snapshot, rel_path)
-        client.copy_object(
-            Bucket=bucket, CopySource={"Bucket": bucket, "Key": src}, Key=dst,
-        )
+    keys = [{"Key": _r2_key(snapshot, p)} for p in rel_paths]
+    client.delete_objects(Bucket=bucket, Delete={"Objects": keys})
 
 
-def _list_all_objects(client, bucket: str, prefix: str) -> list[dict]:
-    keys: list[dict] = []
-    paginator = client.get_paginator("list_objects_v2")
-    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
-        for obj in page.get("Contents", []):
-            keys.append({"Key": obj["Key"]})
-    return keys
-
-
-def _list_all_prefixes(client, bucket: str) -> list[str]:
-    prefixes: list[str] = []
-    paginator = client.get_paginator("list_objects_v2")
-    for page in paginator.paginate(Bucket=bucket, Prefix="backups/", Delimiter="/"):
-        for p in page.get("CommonPrefixes", []):
-            prefixes.append(p["Prefix"])
-    return prefixes
-
-
-def delete_old_snapshots(
-    client, bucket: str, keep: int,
-) -> None:
-    if keep <= 0:
-        return
-    prefixes = _list_all_prefixes(client, bucket)
-    prefixes.sort()
-    to_delete = prefixes[:-keep] if len(prefixes) > keep else []
-    for prefix in to_delete:
-        keys = _list_all_objects(client, bucket, prefix)
-        if keys:
-            client.delete_objects(Bucket=bucket, Delete={"Objects": keys})

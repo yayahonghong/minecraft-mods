@@ -39,7 +39,7 @@ class R2Config:
 
 @dataclass
 class BackupConfig:
-    keep: int = 0
+    pass
 
 
 @dataclass
