@@ -9,7 +9,10 @@ base_path = "/opt/minecraft/server"
 worlds = ["world", "world_nether", "world_the_end"]
 
 [r2]
-account_id = "your-account-id"
+# 方式 A：自定义域名（推荐）
+endpoint_url = "https://r2.yourdomain.com"
+# 方式 B：Account ID 拼接（如果没配自定义域名）
+# account_id = "your-account-id"
 bucket_name = "mc-backups"
 access_key_id = "CHANGEME"
 secret_access_key = "CHANGEME"

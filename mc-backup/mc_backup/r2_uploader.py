@@ -4,7 +4,7 @@ from typing import Optional
 
 
 def create_r2_client(cfg):
-    endpoint = f"https://{cfg.account_id}.r2.cloudflarestorage.com"
+    endpoint = cfg.endpoint_url or f"https://{cfg.account_id}.r2.cloudflarestorage.com"
     return boto3.client(
         "s3",
         endpoint_url=endpoint,
