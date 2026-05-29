@@ -41,6 +41,9 @@ __pycache__/
 dist/
 build/
 
+# mc-backup (real credentials)
+mc-backup/config.toml
+
 # Logs
 *.log
 log.txt
