@@ -3,6 +3,7 @@ package com.ysh.serverhelper;
 import com.ysh.serverhelper.config.ModConfigManager;
 import com.ysh.serverhelper.command.HelperCommand;
 import com.ysh.serverhelper.handler.*;
+import com.ysh.serverhelper.qqcmd.QQCommandWSClient;
 import com.ysh.serverhelper.server.QQCommandServer;
 import com.ysh.serverhelper.utils.ServerI18n;
 import net.fabricmc.api.ModInitializer;
@@ -16,6 +17,7 @@ public class ServerHelperMod implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static ModConfigManager configManager;
     public static QQCommandServer qqCommandServer;
+    public static QQCommandWSClient qqCommandWSClient;
 
     @Override
     public void onInitialize() {
@@ -35,10 +37,13 @@ public class ServerHelperMod implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             qqCommandServer = new QQCommandServer();
             qqCommandServer.start(configManager.getConfig().getQq(), server);
+            qqCommandWSClient = new QQCommandWSClient();
+            qqCommandWSClient.connect(configManager.getConfig().getQq(), server);
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             if (qqCommandServer != null) qqCommandServer.stop();
+            if (qqCommandWSClient != null) qqCommandWSClient.disconnect();
         });
 
         OpChangeHandler.register();
