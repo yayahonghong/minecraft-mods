@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
 import com.ysh.serverhelper.ws.QQWSClient;
+import com.ysh.serverhelper.ws.KeyboardBuilder;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.stream.Collectors;
@@ -48,6 +49,7 @@ public class QQCommandHandler {
             if (cmd.isEmpty()) return;
 
             boolean isAdmin = config.getAdminQq().contains(userId);
+            groupIdCache = groupId;
             String response = executeCommand(cmd, isAdmin);
 
             if (response != null) {
@@ -63,19 +65,7 @@ public class QQCommandHandler {
         String action = parts[0].toLowerCase();
 
         return switch (action) {
-            case "help" -> {
-                StringBuilder sb = new StringBuilder("=== ServerHelper 可用指令 ===\n");
-                sb.append("#help - 查看此帮助菜单\n");
-                sb.append("#list - 查看当前在线玩家列表\n");
-                sb.append("#tps - 查看服务器当前 TPS\n");
-                sb.append("#status - 查看服务器综合状态(内存/在线等)");
-                if (isAdmin) {
-                    sb.append("\n\n[管理员专用]\n");
-                    sb.append("#say <内容> - 以服务器名义广播消息\n");
-                    sb.append("#cmd <命令> - 执行后台控制台命令");
-                }
-                yield sb.toString();
-            }
+            case "help", "menu" -> buildMenuResponse();
             case "list" -> {
                 if (server == null) yield "服务器未就绪";
                 var players = server.getPlayerList().getPlayers();
@@ -118,14 +108,28 @@ public class QQCommandHandler {
                 server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), parts[1]);
                 yield "指令已执行: " + parts[1];
             }
-            default -> "未知指令，发送 #help 查看可用指令";
+            default -> "未知指令，发送 #menu 查看可用指令";
         };
     }
 
+    private static long groupIdCache;
+
+    private static String buildMenuResponse() {
+        JsonObject keyboard = KeyboardBuilder.buildDefaultMenuKeyboard();
+        sendToGroup(groupIdCache, """
+                🏠 MC 服务器菜单
+                点击下方按钮执行命令""".stripIndent(), keyboard);
+        return null;
+    }
+
     private static void sendToGroup(long groupId, String text) {
+        sendToGroup(groupId, text, null);
+    }
+
+    private static void sendToGroup(long groupId, String text, JsonObject keyboard) {
         JsonObject params = new JsonObject();
         params.addProperty("group_id", groupId);
         params.addProperty("message", text);
-        wsClient.sendAction("send_group_msg", params);
+        wsClient.sendAction("send_group_msg", params, keyboard);
     }
 }
