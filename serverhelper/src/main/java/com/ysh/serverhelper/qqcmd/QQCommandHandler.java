@@ -1,50 +1,43 @@
 package com.ysh.serverhelper.qqcmd;
 
+import com.google.gson.JsonObject;
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.notifier.QQNotifier;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.ysh.serverhelper.ws.QQWSClient;
 import net.minecraft.server.MinecraftServer;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
+
 import java.util.stream.Collectors;
 
 public class QQCommandHandler {
-    private static final HttpClient client = HttpClient.newHttpClient();
     private static MinecraftServer server;
+    private static QQWSClient wsClient;
 
-    public static void init(MinecraftServer mcServer) {
+    public static void init(MinecraftServer mcServer, QQWSClient client) {
         server = mcServer;
+        wsClient = client;
     }
 
     public static void handle(String jsonBody, ModConfig.QQConfig config) {
         try {
-            JsonObject obj = JsonParser.parseString(jsonBody).getAsJsonObject();
-            
-            // Ignore non-messages (like heartbeats)
+            JsonObject obj = com.google.gson.JsonParser.parseString(jsonBody).getAsJsonObject();
+
             if (!obj.has("post_type") || !"message".equals(obj.get("post_type").getAsString())) {
                 return;
             }
-            
-            // Only handle group messages for now
+
             if (!obj.has("message_type") || !"group".equals(obj.get("message_type").getAsString())) {
                 return;
             }
-            
+
             if (!obj.has("user_id") || !obj.has("group_id") || (!obj.has("raw_message") && !obj.has("message"))) {
                 return;
             }
 
             long userId = obj.get("user_id").getAsLong();
             long groupId = obj.get("group_id").getAsLong();
-            
-            // Configured target group check
+
             if (groupId != config.getGroupId()) {
-                return; // Ignore messages from other groups
+                return;
             }
 
             String rawMsg = obj.has("raw_message") ? obj.get("raw_message").getAsString().trim() : obj.get("message").getAsString().trim();
@@ -58,7 +51,7 @@ public class QQCommandHandler {
             String response = executeCommand(cmd, isAdmin);
 
             if (response != null) {
-                sendToGroup(config, groupId, response);
+                sendToGroup(groupId, response);
             }
         } catch (Exception e) {
             ServerHelperMod.LOGGER.warn("QQ command handler error", e);
@@ -129,35 +122,10 @@ public class QQCommandHandler {
         };
     }
 
-    private static void sendToGroup(ModConfig.QQConfig config, long groupId, String text) {
-        String json = "{\"group_id\":" + groupId + ",\"message\":\"" + escapeJson(text) + "\"}";
-        String url = config.getApiUrl().replaceAll("/+$", "") + "/send_group_msg";
-
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Content-Type", "application/json; charset=utf-8");
-        if (!config.getToken().isEmpty())
-            builder.header("Authorization", "Bearer " + config.getToken());
-
-        client.sendAsync(builder
-                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8)).build(),
-                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-    }
-
-    private static String escapeJson(String text) {
-        StringBuilder sb = new StringBuilder(text.length());
-        for (char c : text.toCharArray()) {
-            switch (c) {
-                case '\\': sb.append("\\\\"); break;
-                case '"': sb.append("\\\""); break;
-                case '\n': sb.append("\\n"); break;
-                case '\r': sb.append("\\r"); break;
-                case '\t': sb.append("\\t"); break;
-                default:
-                    if (c < 0x20) sb.append(String.format("\\u%04x", (int) c));
-                    else sb.append(c);
-            }
-        }
-        return sb.toString();
+    private static void sendToGroup(long groupId, String text) {
+        JsonObject params = new JsonObject();
+        params.addProperty("group_id", groupId);
+        params.addProperty("message", text);
+        wsClient.sendAction("send_group_msg", params);
     }
 }
