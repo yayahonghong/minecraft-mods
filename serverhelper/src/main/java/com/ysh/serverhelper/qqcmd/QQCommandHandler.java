@@ -4,14 +4,21 @@ import com.google.gson.JsonObject;
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
 import com.ysh.serverhelper.ws.QQWSClient;
-import com.ysh.serverhelper.ws.KeyboardBuilder;
 import net.minecraft.server.MinecraftServer;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class QQCommandHandler {
     private static MinecraftServer server;
     private static QQWSClient wsClient;
+
+    private static final List<MenuSession.MenuItem> MENU_ITEMS = List.of(
+            new MenuSession.MenuItem("👥 在线玩家", "list"),
+            new MenuSession.MenuItem("📊 服务器状态", "status"),
+            new MenuSession.MenuItem("🎮 服务器延迟", "tps"),
+            new MenuSession.MenuItem("🔄 刷新菜单", "menu")
+    );
 
     public static void init(MinecraftServer mcServer, QQWSClient client) {
         server = mcServer;
@@ -22,41 +29,94 @@ public class QQCommandHandler {
         try {
             JsonObject obj = com.google.gson.JsonParser.parseString(jsonBody).getAsJsonObject();
 
-            if (!obj.has("post_type") || !"message".equals(obj.get("post_type").getAsString())) {
-                return;
-            }
-
-            if (!obj.has("message_type") || !"group".equals(obj.get("message_type").getAsString())) {
-                return;
-            }
-
-            if (!obj.has("user_id") || !obj.has("group_id") || (!obj.has("raw_message") && !obj.has("message"))) {
-                return;
-            }
+            if (!obj.has("post_type") || !"message".equals(obj.get("post_type").getAsString())) return;
+            if (!obj.has("message_type") || !"group".equals(obj.get("message_type").getAsString())) return;
+            if (!obj.has("user_id") || !obj.has("group_id") || (!obj.has("raw_message") && !obj.has("message"))) return;
 
             long userId = obj.get("user_id").getAsLong();
             long groupId = obj.get("group_id").getAsLong();
-
-            if (groupId != config.getGroupId()) {
-                return;
-            }
+            if (groupId != config.getGroupId()) return;
 
             String rawMsg = obj.has("raw_message") ? obj.get("raw_message").getAsString().trim() : obj.get("message").getAsString().trim();
             String prefix = config.getCommandPrefix();
 
-            if (!rawMsg.startsWith(prefix)) return;
-            String cmd = rawMsg.substring(prefix.length()).trim();
-            if (cmd.isEmpty()) return;
+            if (rawMsg.startsWith(prefix)) {
+                String cmd = rawMsg.substring(prefix.length()).trim();
+                if (cmd.isEmpty()) return;
 
-            boolean isAdmin = config.getAdminQq().contains(userId);
-            groupIdCache = groupId;
-            String response = executeCommand(cmd, isAdmin);
+                if (handleBuiltinCommand(cmd, userId, groupId, config)) return;
+                boolean isAdmin = config.getAdminQq().contains(userId);
+                String response = executeCommand(cmd, isAdmin);
+                if (response != null) {
+                    sendToGroup(groupId, response);
+                }
+                return;
+            }
 
-            if (response != null) {
-                sendToGroup(groupId, response);
+            String rawLower = rawMsg.toLowerCase();
+            if (rawLower.equals("菜单") || rawLower.equals("帮助")) {
+                MenuSession.set(new MenuSession(userId, groupId, MENU_ITEMS));
+                sendToGroup(groupId, buildMenuText());
+                return;
+            }
+            if (rawLower.equals("取消")) {
+                if (MenuSession.hasActive(userId)) {
+                    MenuSession.remove(userId);
+                    sendToGroup(groupId, "已取消菜单");
+                }
+                return;
+            }
+
+            MenuSession session = MenuSession.get(userId);
+            if (session != null) {
+                handleMenuChoice(userId, groupId, rawMsg, config);
             }
         } catch (Exception e) {
             ServerHelperMod.LOGGER.warn("QQ command handler error", e);
+        }
+    }
+
+    private static boolean handleBuiltinCommand(String cmd, long userId, long groupId, ModConfig.QQConfig config) {
+        if (cmd.equalsIgnoreCase("cancel")) {
+            if (MenuSession.hasActive(userId)) {
+                MenuSession.remove(userId);
+                sendToGroup(groupId, "已取消菜单");
+            }
+            return true;
+        }
+        String action = cmd.split(" ", 2)[0].toLowerCase();
+        if (action.equals("menu") || action.equals("help")) {
+            MenuSession.set(new MenuSession(userId, groupId, MENU_ITEMS));
+            sendToGroup(groupId, buildMenuText());
+            return true;
+        }
+        return false;
+    }
+
+    private static void handleMenuChoice(long userId, long groupId, String rawMsg, ModConfig.QQConfig config) {
+        try {
+            int choice = Integer.parseInt(rawMsg.trim());
+            var items = MENU_ITEMS;
+            if (choice >= 1 && choice <= items.size()) {
+                MenuSession.MenuItem item = items.get(choice - 1);
+                MenuSession.remove(userId);
+
+                if (item.action().equals("menu")) {
+                    MenuSession.set(new MenuSession(userId, groupId, MENU_ITEMS));
+                    sendToGroup(groupId, buildMenuText());
+                    return;
+                }
+
+                boolean isAdmin = config.getAdminQq().contains(userId);
+                String response = executeCommand(item.action(), isAdmin);
+                if (response != null) {
+                    sendToGroup(groupId, response);
+                }
+            } else {
+                sendToGroup(groupId, "无效选项（请输入 1-" + items.size() + "），回复「取消」退出");
+            }
+        } catch (NumberFormatException e) {
+            sendToGroup(groupId, "请输入有效编号，回复「取消」退出菜单");
         }
     }
 
@@ -65,7 +125,6 @@ public class QQCommandHandler {
         String action = parts[0].toLowerCase();
 
         return switch (action) {
-            case "help", "menu" -> buildMenuResponse();
             case "list" -> {
                 if (server == null) yield "服务器未就绪";
                 var players = server.getPlayerList().getPlayers();
@@ -88,7 +147,8 @@ public class QQCommandHandler {
                 long[] tickTimes = server.getTickTimesNanos();
                 long total = 0;
                 for (long t : tickTimes) total += t;
-                double tps = Math.min(1_000_000_000.0 / ((double) total / tickTimes.length), 20.0);
+                double avgNanos = (double) total / tickTimes.length;
+                double tps = Math.min(1_000_000_000.0 / avgNanos, 20.0);
                 long maxMem = Runtime.getRuntime().maxMemory() / 1024 / 1024;
                 long usedMem = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024;
                 yield String.format("在线: %d | TPS: %.1f | 内存: %d/%dMB | Uptime: %dh",
@@ -108,28 +168,22 @@ public class QQCommandHandler {
                 server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), parts[1]);
                 yield "指令已执行: " + parts[1];
             }
-            default -> "未知指令，发送 #menu 查看可用指令";
+            default -> "未知指令，发送 #menu 或「菜单」查看可用指令";
         };
     }
 
-    private static long groupIdCache;
-
-    private static String buildMenuResponse() {
-        JsonObject keyboard = KeyboardBuilder.buildDefaultMenuKeyboard();
-        sendToGroup(groupIdCache, """
-                🏠 MC 服务器菜单
-                点击下方按钮执行命令""".stripIndent(), keyboard);
-        return null;
+    private static String buildMenuText() {
+        StringBuilder sb = new StringBuilder("🏠 MC 服务器菜单\n回复编号执行命令，回复「取消」退出\n\n");
+        for (int i = 0; i < MENU_ITEMS.size(); i++) {
+            sb.append("[").append(i + 1).append("] ").append(MENU_ITEMS.get(i).label()).append("\n");
+        }
+        return sb.toString().stripTrailing();
     }
 
     private static void sendToGroup(long groupId, String text) {
-        sendToGroup(groupId, text, null);
-    }
-
-    private static void sendToGroup(long groupId, String text, JsonObject keyboard) {
         JsonObject params = new JsonObject();
         params.addProperty("group_id", groupId);
         params.addProperty("message", text);
-        wsClient.sendAction("send_group_msg", params, keyboard);
+        wsClient.sendAction("send_group_msg", params);
     }
 }

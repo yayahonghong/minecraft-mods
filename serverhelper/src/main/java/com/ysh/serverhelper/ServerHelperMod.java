@@ -33,11 +33,11 @@ public class ServerHelperMod implements ModInitializer {
         ChatHandler.register();
         ServerLifecycleHandler.register();
 
-        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            qqWSClient = new QQWSClient();
-            qqWSClient.connect(configManager.getConfig().getQq(), server);
-            qqWSClient.setEventListener(json -> QQCommandHandler.handle(json, configManager.getConfig().getQq()));
+        qqWSClient = new QQWSClient();
+        qqWSClient.connect(configManager.getConfig().getQq());
+        qqWSClient.setEventListener(json -> QQCommandHandler.handle(json, configManager.getConfig().getQq()));
 
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             QQCommandHandler.init(server, qqWSClient);
         });
 

@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import net.minecraft.server.MinecraftServer;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -25,11 +24,9 @@ public class QQWSClient {
     private String wsUrl;
     private ModConfig.QQConfig config;
     private Consumer<String> eventListener;
-    private MinecraftServer mcServer;
 
-    public void connect(ModConfig.QQConfig qqConfig, MinecraftServer server) {
+    public void connect(ModConfig.QQConfig qqConfig) {
         this.config = qqConfig;
-        this.mcServer = server;
 
         String apiUrl = qqConfig.getApiUrl().replaceAll("/+$", "");
         this.wsUrl = (apiUrl.startsWith("https://")
@@ -37,7 +34,19 @@ public class QQWSClient {
                 : "ws://" + apiUrl.substring(7));
 
         active = true;
-        connectInternal();
+
+        var wsBuilder = httpClient.newWebSocketBuilder();
+        if (!config.getToken().isEmpty()) {
+            wsBuilder.header("Authorization", "Bearer " + config.getToken());
+        }
+        try {
+            this.webSocket = wsBuilder.buildAsync(URI.create(wsUrl), new WsListener())
+                    .get(10, TimeUnit.SECONDS);
+            ServerHelperMod.LOGGER.info("QQ WebSocket connected to {}", wsUrl);
+        } catch (Exception e) {
+            ServerHelperMod.LOGGER.warn("QQ WS connect failed: {}", e.getMessage());
+            scheduleReconnect();
+        }
     }
 
     private void connectInternal() {
@@ -50,10 +59,10 @@ public class QQWSClient {
                 .orTimeout(10, TimeUnit.SECONDS)
                 .thenAccept(ws -> {
                     this.webSocket = ws;
-                    ServerHelperMod.LOGGER.info("QQ WebSocket connected to {}", wsUrl);
+                    ServerHelperMod.LOGGER.info("QQ WebSocket reconnected to {}", wsUrl);
                 })
                 .exceptionally(e -> {
-                    ServerHelperMod.LOGGER.warn("QQ WS connect failed, retry in 5s: {}", e.getMessage());
+                    ServerHelperMod.LOGGER.warn("QQ WS reconnect failed: {}", e.getMessage());
                     scheduleReconnect();
                     return null;
                 });
@@ -111,13 +120,6 @@ public class QQWSClient {
         });
 
         return future;
-    }
-
-    public CompletableFuture<JsonObject> sendAction(String action, JsonObject params, JsonObject keyboard) {
-        if (keyboard != null) {
-            params.add("keyboard", keyboard);
-        }
-        return sendAction(action, params);
     }
 
     public void setEventListener(Consumer<String> listener) {
