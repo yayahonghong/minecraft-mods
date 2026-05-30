@@ -40,7 +40,6 @@ class R2Config:
 @dataclass
 class BackupConfig:
     keep: int = 0
-    max_storage_mb: int = 9000  # 安全阈值，超出跳过备份
 
 
 @dataclass

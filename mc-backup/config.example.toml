@@ -18,5 +18,4 @@ access_key_id = "CHANGEME"
 secret_access_key = "CHANGEME"
 
 [backup]
-keep = 7           # 保留最近 7 份快照，0 = 不清理
-max_storage_mb = 9000   # 存储超过此值跳过备份，防扣费（0 = 不限制）
+keep = 7    # 保留最近 7 份快照，0 = 不清理

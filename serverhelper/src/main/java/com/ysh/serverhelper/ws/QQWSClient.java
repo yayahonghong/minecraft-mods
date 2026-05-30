@@ -82,7 +82,8 @@ public class QQWSClient {
 
     public CompletableFuture<JsonObject> sendAction(String action, JsonObject params) {
         CompletableFuture<JsonObject> future = new CompletableFuture<>();
-        if (webSocket == null || !active) {
+        WebSocket ws = this.webSocket;
+        if (ws == null || !active) {
             future.completeExceptionally(new RuntimeException("WS not connected"));
             return future;
         }
@@ -95,7 +96,12 @@ public class QQWSClient {
         payload.add("params", params);
         payload.addProperty("echo", echo);
 
-        webSocket.sendText(GSON.toJson(payload), true);
+        ws.sendText(GSON.toJson(payload), true)
+                .exceptionally(e -> {
+                    CompletableFuture<JsonObject> f = pendingRequests.remove(echo);
+                    if (f != null) f.completeExceptionally(e);
+                    return null;
+                });
 
         Thread.startVirtualThread(() -> {
             try { Thread.sleep(10000); } catch (InterruptedException ignored) { }

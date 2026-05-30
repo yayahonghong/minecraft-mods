@@ -2,7 +2,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch, call
 from mc_backup.r2_uploader import (
     create_r2_client, upload_changed_files, copy_unchanged_files,
-    delete_files, delete_old_snapshots, check_quota,
+    delete_files, delete_old_snapshots,
 )
 
 
@@ -35,26 +35,6 @@ def test_upload_changed_files(tmp_path: Path):
         "my-bucket",
         "backups/2026-05-29_143000/world/a.dat",
     )
-
-
-def test_check_quota_within_limit():
-    client = MagicMock()
-    paginator = MagicMock()
-    paginator.paginate.return_value = [{"Contents": [{"Size": 100 * 1024 * 1024}]}]
-    client.get_paginator.return_value = paginator
-    assert check_quota(client, "bucket", max_mb=500)
-
-
-def test_check_quota_exceeded():
-    client = MagicMock()
-    paginator = MagicMock()
-    paginator.paginate.return_value = [{"Contents": [{"Size": 600 * 1024 * 1024}]}]
-    client.get_paginator.return_value = paginator
-    assert not check_quota(client, "bucket", max_mb=500)
-
-
-def test_check_quota_disabled():
-    assert check_quota(MagicMock(), "bucket", max_mb=0)
 
 
 def test_copy_unchanged_files():
