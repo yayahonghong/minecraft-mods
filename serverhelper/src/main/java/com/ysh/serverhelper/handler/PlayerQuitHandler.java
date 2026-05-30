@@ -31,7 +31,7 @@ public class PlayerQuitHandler {
                     .replace("{ip}", ip)
                     .replace("{time}", LocalDateTime.now().format(TF));
 
-            var n = new QQNotifier(config.getQq());
+            var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
             if (n.isEnabled()) Thread.ofVirtual().start(() -> n.send(null, msg));
         });
     }

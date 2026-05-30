@@ -11,7 +11,7 @@ public class ServerLifecycleHandler {
             ModConfig config = ServerHelperMod.configManager.getConfig();
             var ec = config.getEvents().get("server_start");
             if (ec != null && ec.isEnabled()) {
-                var n = new QQNotifier(config.getQq());
+                var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
                 if (n.isEnabled()) Thread.ofVirtual().start(() -> n.send(null, ec.getMessage()));
             }
         });
@@ -20,7 +20,7 @@ public class ServerLifecycleHandler {
             ModConfig config = ServerHelperMod.configManager.getConfig();
             var ec = config.getEvents().get("server_stop");
             if (ec != null && ec.isEnabled()) {
-                var n = new QQNotifier(config.getQq());
+                var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
                 if (n.isEnabled()) {
                     // Start the thread
                     Thread t = Thread.ofVirtual().start(() -> n.send(null, ec.getMessage()));

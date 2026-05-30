@@ -46,7 +46,7 @@ public class HelperCommand {
                                     .replace("{client}", "Fabric")
                                     .replace("{time}", "test");
 
-                            var n = new QQNotifier(config.getQq());
+                            var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
                             if (n.isEnabled()) {
                                 n.send(null, msg);
                                 ctx.getSource().sendSuccess(() ->
