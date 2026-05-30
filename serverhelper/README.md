@@ -11,14 +11,15 @@
 ## 架构
 
 ```
-Minecraft Server ──POST /send_group_msg──→ NapCat HTTP Server ──→ QQ 群
-Minecraft Server ──────WebSocket──────────→ NapCat WS Server ←←──── QQ 群消息
+Minecraft Server ───WebSocket（双向）───→ NapCat WS Server ←→ QQ 群
+                    ├── 发送通知
+                    └── 接收指令
 ```
 
 ## 环境要求
 
 - Minecraft 26.1, Fabric Loader >= 0.18.5, Fabric API, Java >= 25
-- NapCatQQ (v4.18+) 启用 HTTP 服务器 + HTTP 客户端
+- NapCatQQ (v4.18+) 启用 WebSocket 服务器
 
 ## 配置
 

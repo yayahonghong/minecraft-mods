@@ -52,8 +52,8 @@ minecraft-mods/
 
 - **入口**: `com.ysh.serverhelper.ServerHelperMod` (ModInitializer)
 - **事件处理器**: 每个事件一个独立 Handler 类（`PlayerJoinHandler`, `PlayerDeathHandler` 等），通过静态 `register()` 方法注册
-- **QQ 通知**: `Notifier` + `QQNotifier` 发送 HTTP 请求到 NapCat
-- **QQ 命令**: `QQCommandWSClient` 通过 WebSocket 接收 NapCat 事件 + `QQCommandHandler` 处理指令
+- **QQ 通知**: `Notifier` + `QQNotifier` 通过 `QQWSClient.sendAction` 走 WebSocket 发送
+- **QQ 命令**: `QQWSClient` WebSocket 接收 NapCat 事件 + `QQCommandHandler` 处理指令
 - **Mixin**: `PlayerAdvancementsMixin` — 成就监听通过 Mixin 实现
 - **国际化**: `ServerI18n` 加载 `zh_cn.json` 将死讯/成就翻译为中文
 - **命令**: `/helper list|toggle|test|reload` 通过 Fabric API Command API 注册
