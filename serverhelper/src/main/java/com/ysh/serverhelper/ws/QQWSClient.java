@@ -34,11 +34,7 @@ public class QQWSClient {
         String apiUrl = qqConfig.getApiUrl().replaceAll("/+$", "");
         this.wsUrl = (apiUrl.startsWith("https://")
                 ? "wss://" + apiUrl.substring(8)
-                : "ws://" + apiUrl.substring(7)) + "/ws";
-
-        if (!qqConfig.getToken().isEmpty()) {
-            wsUrl += "?access_token=" + qqConfig.getToken();
-        }
+                : "ws://" + apiUrl.substring(7));
 
         active = true;
         connectInternal();
@@ -46,8 +42,11 @@ public class QQWSClient {
 
     private void connectInternal() {
         if (!active) return;
-        httpClient.newWebSocketBuilder()
-                .buildAsync(URI.create(wsUrl), new WsListener())
+        var wsBuilder = httpClient.newWebSocketBuilder();
+        if (!config.getToken().isEmpty()) {
+            wsBuilder.header("Authorization", "Bearer " + config.getToken());
+        }
+        wsBuilder.buildAsync(URI.create(wsUrl), new WsListener())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .thenAccept(ws -> {
                     this.webSocket = ws;
