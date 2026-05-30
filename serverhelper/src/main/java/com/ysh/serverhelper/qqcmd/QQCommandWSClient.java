@@ -2,7 +2,6 @@ package com.ysh.serverhelper.qqcmd;
 
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.ws.QQWSClient;
 import net.minecraft.server.MinecraftServer;
 
 import java.net.URI;
@@ -17,7 +16,6 @@ public class QQCommandWSClient {
     private volatile boolean active;
     private String wsUrl;
     private ModConfig.QQConfig config;
-    private final QQWSClient wsClient = new QQWSClient();
 
     public QQCommandWSClient() {
         this.client = HttpClient.newBuilder().build();
@@ -25,7 +23,7 @@ public class QQCommandWSClient {
 
     public void connect(ModConfig.QQConfig qqConfig, MinecraftServer mcServer) {
         this.config = qqConfig;
-        QQCommandHandler.init(mcServer, wsClient);
+        QQCommandHandler.init(mcServer);
 
         String apiUrl = qqConfig.getApiUrl().replaceAll("/+$", "");
         this.wsUrl = (apiUrl.startsWith("https://")
