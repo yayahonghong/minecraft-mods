@@ -113,6 +113,13 @@ public class QQWSClient {
         return future;
     }
 
+    public CompletableFuture<JsonObject> sendAction(String action, JsonObject params, JsonObject keyboard) {
+        if (keyboard != null) {
+            params.add("keyboard", keyboard);
+        }
+        return sendAction(action, params);
+    }
+
     public void setEventListener(Consumer<String> listener) {
         this.eventListener = listener;
     }
