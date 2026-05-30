@@ -3,8 +3,9 @@ package com.ysh.serverhelper;
 import com.ysh.serverhelper.config.ModConfigManager;
 import com.ysh.serverhelper.command.HelperCommand;
 import com.ysh.serverhelper.handler.*;
-import com.ysh.serverhelper.qqcmd.QQCommandWSClient;
+import com.ysh.serverhelper.qqcmd.QQCommandHandler;
 import com.ysh.serverhelper.utils.ServerI18n;
+import com.ysh.serverhelper.ws.QQWSClient;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -15,7 +16,7 @@ public class ServerHelperMod implements ModInitializer {
     public static final String MOD_ID = "serverhelper";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static ModConfigManager configManager;
-    public static QQCommandWSClient qqCommandWSClient;
+    public static QQWSClient qqWSClient;
 
     @Override
     public void onInitialize() {
@@ -33,12 +34,15 @@ public class ServerHelperMod implements ModInitializer {
         ServerLifecycleHandler.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            qqCommandWSClient = new QQCommandWSClient();
-            qqCommandWSClient.connect(configManager.getConfig().getQq(), server);
+            qqWSClient = new QQWSClient();
+            qqWSClient.connect(configManager.getConfig().getQq(), server);
+            qqWSClient.setEventListener(json -> QQCommandHandler.handle(json, configManager.getConfig().getQq()));
+
+            QQCommandHandler.init(server, qqWSClient);
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            if (qqCommandWSClient != null) qqCommandWSClient.disconnect();
+            if (qqWSClient != null) qqWSClient.disconnect();
         });
 
         OpChangeHandler.register();
