@@ -8,6 +8,7 @@
 |---|---|---|
 | ServerHelper | `serverhelper/` | 服务器管理模组，集成 QQ 通知与远程命令 |
 | NoCreeperGrief | `nocreepergrief/` | 阻止苦力怕爆炸破坏地形，视觉改为真实烟花火箭效果 |
+| ServerBot | `serverbot/` | 服务器假人模组，生成 Bot 挂机不掉线 |
 
 ## 构建
 

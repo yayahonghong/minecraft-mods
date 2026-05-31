@@ -4,7 +4,7 @@
 
 ## 项目结构
 
-多模组 Fabric 父工程，当前包含子模组 `serverhelper`、`nocreepergrief`。
+多模组 Fabric 父工程，当前包含子模组 `serverhelper`、`nocreepergrief`、`serverbot`。
 
 ```
 minecraft-mods/
@@ -20,6 +20,10 @@ minecraft-mods/
 │   ├── build.gradle          # fabric-loom 插件, minecraft/fabric-api 依赖
 │   ├── src/main/java/        # 模组代码（3 个 Mixin 文件）
 │   └── src/main/resources/   # fabric.mod.json + mixins.json
+├── serverbot/
+│   ├── build.gradle          # fabric-loom 插件, minecraft/fabric-api 依赖
+│   └── src/main/
+│       └── java/com/ysh/serverbot/  # 模组代码
 └── run/                      # Minecraft 开发运行时（Loom 期望在根目录）
 ```
 
@@ -29,6 +33,7 @@ minecraft-mods/
 |---|---|---|
 | ServerHelper | `serverhelper/` | QQ 通知、命令、服务器管理 |
 | NoCreeperGrief | `nocreepergrief/` | 阻止苦力怕爆炸破坏地形，视觉改为真实烟花火箭效果 |
+| ServerBot | `serverbot/` | 服务器假人模组，生成 Bot 挂机不掉线 |
 
 ## 构建与测试
 
@@ -68,6 +73,17 @@ minecraft-mods/
 - **Accessor** (`FireworkRocketEntityAccessor`): 访问 `life`/`lifetime` 私有字段
 - **伤害取消** (`FireworkRocketEntityMixin`): 拦截 `dealExplosionDamage`，避免烟花叠加伤害
 - **无配置文件**，功能全部内置于代码
+
+## ServerBot 模组架构
+
+- **入口**: `com.ysh.serverbot.ServerBotMod` (ModInitializer)
+- **假人实体** (`ServerBotPlayer`): 继承 `ServerPlayer`，构造时指定坐标
+- **生命周期管理** (`BotManager`): 单例，管理假人生成/移除，最大 5 个
+- **静默网络** (`BotNetworkHandler`): 继承 `ServerGamePacketListenerImpl`，空 `tick()` 防 idle timeout
+- **哑 Connection**: 匿名子类覆盖所有 `send`/`setupInboundProtocol` 为 no-op
+- **命令**: `/bot spawn|remove <名字>|list`（所有人可用）
+- **Mixin** (`SleepStatusMixin`): `@Redirect` 拦截 `SleepStatus.update()`，跳过假人不影响睡觉
+- **无配置文件**，所有功能内置于代码
 
 ## 添加新模组
 
