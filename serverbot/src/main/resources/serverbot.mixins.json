@@ -1,0 +1,12 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "com.ysh.serverbot.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "SleepStatusMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
