@@ -46,7 +46,7 @@ public class OpChangeHandler {
 
     private static void sendOpNotif(String player, String status, ModConfig config, String template) {
         String msg = template.replace("{player}", player).replace("{status}", status);
-        var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
-        if (n.isEnabled()) Thread.ofVirtual().start(() -> n.send(null, msg));
+        var n = new QQNotifier(config.getQq(), ServerHelperMod.wsClient);
+        if (n.isEnabled()) Thread.ofVirtual().start(() -> n.send(msg));
     }
 }

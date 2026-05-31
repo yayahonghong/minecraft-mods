@@ -65,23 +65,7 @@ Minecraft Server ───WebSocket（双向）───→ NapCat WS Server ←
 
 ## NapCat 配置
 
-### HTTP 服务器（Mod → QQ 发消息）
-
-```json
-{
-  "network": {
-    "httpServers": [{
-      "name": "serverhelper",
-      "enable": true,
-      "port": 3000,
-      "host": "0.0.0.0",
-      "token": "<你的Token>"
-    }]
-  }
-}
-```
-
-### WebSocket 服务器（QQ 消息 → Mod 接收）
+### WebSocket 服务器
 
 ```json
 {
@@ -96,8 +80,6 @@ Minecraft Server ───WebSocket（双向）───→ NapCat WS Server ←
   }
 }
 ```
-
-注意：NapCat 的 HTTP 和 WebSocket 通常需要分开端口运行。如需通过同一隧道访问，可在 NapCat 服务器上使用 nginx/OpenResty 反向代理，按路径 `/ws` 转发到 WS 端口。
 
 ## QQ 命令
 

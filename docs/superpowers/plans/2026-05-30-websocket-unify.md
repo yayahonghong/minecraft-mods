@@ -203,7 +203,7 @@ package com.ysh.serverhelper.qqcmd;
 import com.google.gson.JsonObject;
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.ws.QQWSClient;
+import com.ysh.serverhelper.ws.WSClient;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.stream.Collectors;
@@ -350,7 +350,7 @@ package com.ysh.serverhelper.notifier;
 
 import com.google.gson.JsonObject;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.ws.QQWSClient;
+import com.ysh.serverhelper.ws.WSClient;
 
 public class QQNotifier implements Notifier {
     private final QQWSClient wsClient;
@@ -402,7 +402,7 @@ import com.ysh.serverhelper.command.HelperCommand;
 import com.ysh.serverhelper.handler.*;
 import com.ysh.serverhelper.qqcmd.QQCommandHandler;
 import com.ysh.serverhelper.utils.ServerI18n;
-import com.ysh.serverhelper.ws.QQWSClient;
+import com.ysh.serverhelper.ws.WSClient;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;

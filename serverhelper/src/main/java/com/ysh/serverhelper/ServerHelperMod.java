@@ -5,7 +5,7 @@ import com.ysh.serverhelper.command.HelperCommand;
 import com.ysh.serverhelper.handler.*;
 import com.ysh.serverhelper.qqcmd.QQCommandHandler;
 import com.ysh.serverhelper.utils.ServerI18n;
-import com.ysh.serverhelper.ws.QQWSClient;
+import com.ysh.serverhelper.ws.WSClient;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -16,7 +16,7 @@ public class ServerHelperMod implements ModInitializer {
     public static final String MOD_ID = "serverhelper";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static ModConfigManager configManager;
-    public static QQWSClient qqWSClient;
+    public static WSClient wsClient;
 
     @Override
     public void onInitialize() {
@@ -33,22 +33,20 @@ public class ServerHelperMod implements ModInitializer {
         ChatHandler.register();
         ServerLifecycleHandler.register();
 
-        qqWSClient = new QQWSClient();
-        qqWSClient.connect(configManager.getConfig().getQq());
-        qqWSClient.setEventListener(json -> QQCommandHandler.handle(json, configManager.getConfig().getQq()));
+        wsClient = new WSClient();
+        wsClient.connect(configManager.getConfig().getQq());
+        wsClient.setEventListener(json -> QQCommandHandler.handle(json, configManager.getConfig().getQq()));
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            QQCommandHandler.init(server, qqWSClient);
+            QQCommandHandler.init(server, wsClient);
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            if (qqWSClient != null) qqWSClient.disconnect();
+            if (wsClient != null) wsClient.disconnect();
         });
 
         OpChangeHandler.register();
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            HelperCommand.register(dispatcher);
-        });
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> HelperCommand.register(dispatcher));
     }
 }

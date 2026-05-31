@@ -13,7 +13,10 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-public class QQWSClient {
+/**
+ * NapCat WebSocket客户端
+ */
+public class WSClient {
     private static final Gson GSON = new Gson();
     private final HttpClient httpClient = HttpClient.newBuilder().build();
     private final AtomicLong echoCounter = new AtomicLong(0);

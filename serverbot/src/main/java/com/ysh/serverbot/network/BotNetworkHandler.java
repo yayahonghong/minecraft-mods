@@ -5,8 +5,7 @@ import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.ServerboundClientInformationPacket;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
-import net.minecraft.network.protocol.common.ServerboundPongPacket;
-import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
+import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 import net.minecraft.network.protocol.game.ServerboundAttackPacket;
@@ -255,6 +254,10 @@ public class BotNetworkHandler extends ServerGamePacketListenerImpl {
     }
 
     @Override
+    public void handleKeepAlive(ServerboundKeepAlivePacket packet) {
+    }
+
+    @Override
     public void handleAttack(ServerboundAttackPacket packet) {
     }
 
@@ -332,6 +335,10 @@ public class BotNetworkHandler extends ServerGamePacketListenerImpl {
 
     @Override
     public void handleCustomPayload(ServerboundCustomPayloadPacket packet) {
+    }
+
+    @Override
+    public void handleCookieResponse(ServerboundCookieResponsePacket packet) {
     }
 
     @Override

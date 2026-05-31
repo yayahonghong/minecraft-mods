@@ -5,12 +5,9 @@ import com.ysh.serverhelper.config.ModConfig;
 import com.ysh.serverhelper.notifier.QQNotifier;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import java.util.concurrent.CompletableFuture;
 
 public class HelperCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -46,9 +43,9 @@ public class HelperCommand {
                                     .replace("{client}", "Fabric")
                                     .replace("{time}", "test");
 
-                            var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
+                            var n = new QQNotifier(config.getQq(), ServerHelperMod.wsClient);
                             if (n.isEnabled()) {
-                                n.send(null, msg);
+                                n.send(msg);
                                 ctx.getSource().sendSuccess(() ->
                                         Component.literal("§aTest notification sent!"), false);
                             } else {

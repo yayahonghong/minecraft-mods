@@ -3,7 +3,7 @@ package com.ysh.serverhelper.qqcmd;
 import com.google.gson.JsonObject;
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.ws.QQWSClient;
+import com.ysh.serverhelper.ws.WSClient;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class QQCommandHandler {
     private static MinecraftServer server;
-    private static QQWSClient wsClient;
+    private static WSClient wsClient;
 
     private static final List<MenuSession.MenuItem> MENU_ITEMS = List.of(
             new MenuSession.MenuItem("👥 在线玩家", "list"),
@@ -20,7 +20,7 @@ public class QQCommandHandler {
             new MenuSession.MenuItem("🔄 刷新菜单", "menu")
     );
 
-    public static void init(MinecraftServer mcServer, QQWSClient client) {
+    public static void init(MinecraftServer mcServer, WSClient client) {
         server = mcServer;
         wsClient = client;
     }
@@ -47,9 +47,7 @@ public class QQCommandHandler {
                 if (handleBuiltinCommand(cmd, userId, groupId, config)) return;
                 boolean isAdmin = config.getAdminQq().contains(userId);
                 String response = executeCommand(cmd, isAdmin);
-                if (response != null) {
-                    sendToGroup(groupId, response);
-                }
+                sendToGroup(groupId, response);
                 return;
             }
 
@@ -109,9 +107,7 @@ public class QQCommandHandler {
 
                 boolean isAdmin = config.getAdminQq().contains(userId);
                 String response = executeCommand(item.action(), isAdmin);
-                if (response != null) {
-                    sendToGroup(groupId, response);
-                }
+                sendToGroup(groupId, response);
             } else {
                 sendToGroup(groupId, "无效选项（请输入 1-" + items.size() + "），回复「取消」退出");
             }

@@ -4,7 +4,6 @@ import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
 import com.ysh.serverhelper.notifier.QQNotifier;
 import com.ysh.serverhelper.utils.ServerI18n;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -42,9 +41,9 @@ public class AdvancementHandler {
                 .replace("{advancement}", name)
                 .replace("{time}", LocalDateTime.now().format(TF));
 
-        var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
+        var n = new QQNotifier(config.getQq(), ServerHelperMod.wsClient);
         if (n.isEnabled()) {
-            Thread.ofVirtual().start(() -> n.send(null, msg));
+            Thread.ofVirtual().start(() -> n.send(msg));
         }
     }
 }

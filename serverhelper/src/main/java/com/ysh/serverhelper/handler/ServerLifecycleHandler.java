@@ -11,8 +11,8 @@ public class ServerLifecycleHandler {
             ModConfig config = ServerHelperMod.configManager.getConfig();
             var ec = config.getEvents().get("server_start");
             if (ec != null && ec.isEnabled()) {
-                var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
-                if (n.isEnabled()) Thread.ofVirtual().start(() -> n.send(null, ec.getMessage()));
+                var n = new QQNotifier(config.getQq(), ServerHelperMod.wsClient);
+                if (n.isEnabled()) Thread.ofVirtual().start(() -> n.send(ec.getMessage()));
             }
         });
 
@@ -20,10 +20,10 @@ public class ServerLifecycleHandler {
             ModConfig config = ServerHelperMod.configManager.getConfig();
             var ec = config.getEvents().get("server_stop");
             if (ec != null && ec.isEnabled()) {
-                var n = new QQNotifier(config.getQq(), ServerHelperMod.qqWSClient);
+                var n = new QQNotifier(config.getQq(), ServerHelperMod.wsClient);
                 if (n.isEnabled()) {
                     // Start the thread
-                    Thread t = Thread.ofVirtual().start(() -> n.send(null, ec.getMessage()));
+                    Thread t = Thread.ofVirtual().start(() -> n.send(ec.getMessage()));
                     try {
                         // Wait up to 3 seconds for the HTTP request to finish
                         // If we don't wait, the JVM might exit before the network packet is actually sent

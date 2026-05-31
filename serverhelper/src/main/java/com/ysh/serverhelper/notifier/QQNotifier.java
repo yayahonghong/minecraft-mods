@@ -2,19 +2,32 @@ package com.ysh.serverhelper.notifier;
 
 import com.google.gson.JsonObject;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.ws.QQWSClient;
+import com.ysh.serverhelper.ws.WSClient;
 
+/**
+ * NapCat通知实现
+ */
 public class QQNotifier implements Notifier {
-    private final QQWSClient wsClient;
+
+    /**
+     * WebSocket客户端
+     */
+    private final WSClient wsClient;
+
+    /**
+     * NapCat通知配置
+     */
     private final ModConfig.QQConfig config;
 
-    public QQNotifier(ModConfig.QQConfig config, QQWSClient wsClient) {
+    public QQNotifier(ModConfig.QQConfig config, WSClient wsClient) {
         this.config = config;
         this.wsClient = wsClient;
     }
 
     @Override
-    public String getName() { return "QQ(NapCat)"; }
+    public String getName() {
+        return "QQ(NapCat)";
+    }
 
     @Override
     public boolean isEnabled() {
@@ -22,7 +35,7 @@ public class QQNotifier implements Notifier {
     }
 
     @Override
-    public void send(JoinNotification notification, String message) {
+    public void send(String message) {
         if (!isEnabled()) return;
         JsonObject params = new JsonObject();
         params.addProperty("group_id", config.getGroupId());
