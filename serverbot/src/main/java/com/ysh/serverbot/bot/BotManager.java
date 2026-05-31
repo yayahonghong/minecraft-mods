@@ -53,6 +53,7 @@ public class BotManager {
         GameProfile profile = new GameProfile(UUID.randomUUID(), name);
 
         ServerBotPlayer bot = new ServerBotPlayer(server, level, profile, ClientInformation.createDefault());
+        bot.setPos(owner.getX(), owner.getY(), owner.getZ());
 
         Connection connection = new Connection(PacketFlow.CLIENTBOUND) {
             @Override
