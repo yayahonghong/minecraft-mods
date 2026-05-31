@@ -4,9 +4,12 @@ import com.mojang.authlib.GameProfile;
 import com.ysh.serverbot.network.BotNetworkHandler;
 import io.netty.channel.ChannelFutureListener;
 import net.minecraft.network.Connection;
+import net.minecraft.network.DisconnectionDetails;
+import net.minecraft.network.PacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.ProtocolInfo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
@@ -70,13 +73,25 @@ public class BotManager {
             }
 
             @Override
+            public <T extends PacketListener> void setupInboundProtocol(ProtocolInfo<T> protocol, T listener) {
+            }
+
+            @Override
+            public void setupOutboundProtocol(ProtocolInfo<?> protocol) {
+            }
+
+            @Override
             public void disconnect(Component message) {
+            }
+
+            @Override
+            public void disconnect(DisconnectionDetails details) {
             }
         };
 
-        bot.connection = new BotNetworkHandler(server, bot, connection);
-
         server.getPlayerList().placeNewPlayer(connection, bot, CommonListenerCookie.createInitial(profile, false));
+
+        bot.connection = new BotNetworkHandler(server, bot, connection);
 
         bots.put(name, bot);
         server.getPlayerList().broadcastSystemMessage(
