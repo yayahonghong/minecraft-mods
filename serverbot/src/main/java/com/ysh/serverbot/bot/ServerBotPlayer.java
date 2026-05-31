@@ -7,7 +7,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 public class ServerBotPlayer extends ServerPlayer {
-    public ServerBotPlayer(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation clientInfo) {
+    public ServerBotPlayer(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation clientInfo, double x, double y, double z) {
         super(server, level, profile, clientInfo);
+        setPos(x, y, z);
     }
 }
