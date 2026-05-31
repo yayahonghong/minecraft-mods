@@ -34,6 +34,14 @@ public class BotManager {
         return INSTANCE;
     }
 
+    /**
+     * 在指定玩家位置生成一个假人（Bot）。
+     * 为了让假人正常存在于世界中，我们构造了伪造的 GameProfile 和内部的 DummyConnection，
+     * 并将其作为常规玩家加入到 PlayerList 中。
+     * 
+     * @param owner 触发生成命令的玩家，用于获取坐标和世界实例
+     * @return 如果生成成功返回 ServerBotPlayer 实例，否则返回 null
+     */
     public ServerBotPlayer spawnBot(ServerPlayer owner) {
         if (bots.size() >= MAX_BOTS) {
             owner.sendSystemMessage(Component.literal("§c已达到最大假人数限制 (" + MAX_BOTS + " 个)"));
@@ -54,40 +62,7 @@ public class BotManager {
 
         ServerBotPlayer bot = new ServerBotPlayer(server, level, profile, ClientInformation.createDefault(), owner.getX(), owner.getY(), owner.getZ());
 
-        Connection connection = new Connection(PacketFlow.CLIENTBOUND) {
-            @Override
-            public boolean isMemoryConnection() {
-                return true;
-            }
-
-            @Override
-            public void send(Packet<?> packet) {
-            }
-
-            @Override
-            public void send(Packet<?> packet, ChannelFutureListener listener) {
-            }
-
-            @Override
-            public void send(Packet<?> packet, ChannelFutureListener listener, boolean b) {
-            }
-
-            @Override
-            public <T extends PacketListener> void setupInboundProtocol(ProtocolInfo<T> protocol, T listener) {
-            }
-
-            @Override
-            public void setupOutboundProtocol(ProtocolInfo<?> protocol) {
-            }
-
-            @Override
-            public void disconnect(Component message) {
-            }
-
-            @Override
-            public void disconnect(DisconnectionDetails details) {
-            }
-        };
+        Connection connection = new com.ysh.serverbot.network.DummyConnection(PacketFlow.CLIENTBOUND);
 
         server.getPlayerList().placeNewPlayer(connection, bot, CommonListenerCookie.createInitial(profile, false));
 

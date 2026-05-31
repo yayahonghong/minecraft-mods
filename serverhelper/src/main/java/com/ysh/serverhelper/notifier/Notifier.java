@@ -20,5 +20,5 @@ public interface Notifier {
      * 发送消息
      * @param message 消息内容
      */
-    void send(String message);
+    java.util.concurrent.CompletableFuture<Void> send(String message);
 }

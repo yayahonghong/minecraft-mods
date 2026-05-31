@@ -2,7 +2,6 @@ package com.ysh.serverhelper.handler;
 
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.notifier.QQNotifier;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import java.util.HashSet;
@@ -24,8 +23,8 @@ public class OpChangeHandler {
             if (tickCounter % 100 != 0) return;
 
             ModConfig config = ServerHelperMod.configManager.getConfig();
-            var ec = config.getEvents().get("op_change");
-            if (ec == null || !ec.isEnabled()) return;
+            var eventConfig = config.getEvents().get("op_change");
+            if (eventConfig == null || !eventConfig.isEnabled()) return;
 
             Set<String> currentOps = server.getPlayerList().getOps().getEntries().stream()
                     .map(e -> e.getUser().name()).collect(Collectors.toSet());
@@ -33,11 +32,11 @@ public class OpChangeHandler {
             if (!currentOps.equals(cachedOps)) {
                 for (String name : currentOps) {
                     if (!cachedOps.contains(name))
-                        sendOpNotif(name, "granted", config, ec.getMessage());
+                        sendOpNotif(name, "granted", config, eventConfig.getMessage());
                 }
                 for (String name : cachedOps) {
                     if (!currentOps.contains(name))
-                        sendOpNotif(name, "revoked", config, ec.getMessage());
+                        sendOpNotif(name, "revoked", config, eventConfig.getMessage());
                 }
                 cachedOps = new HashSet<>(currentOps);
             }
@@ -46,7 +45,7 @@ public class OpChangeHandler {
 
     private static void sendOpNotif(String player, String status, ModConfig config, String template) {
         String msg = template.replace("{player}", player).replace("{status}", status);
-        var n = new QQNotifier(config.getQq(), ServerHelperMod.wsClient);
-        if (n.isEnabled()) Thread.ofVirtual().start(() -> n.send(msg));
+        var notifier = ServerHelperMod.getNotifier();
+        if (notifier.isEnabled()) notifier.send(msg);
     }
 }

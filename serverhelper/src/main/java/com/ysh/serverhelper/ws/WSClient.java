@@ -91,16 +91,25 @@ public class WSClient {
         }
     }
 
+    /**
+     * 发送异步操作指令到 QQ 客户端（NapCat），并等待响应。
+     * 使用 echo 机制确保能将异步的 WebSocket 响应匹配到对应的请求上。
+     * 为避免因为 WebSocket 无响应导致内存泄漏，设定了10秒超时并在超时或完成时自动清理。
+     * 
+     * @param action 操作名称（如 send_group_msg）
+     * @param params 附带参数的 JSON 对象
+     * @return 包含返回结果的 CompletableFuture
+     */
     public CompletableFuture<JsonObject> sendAction(String action, JsonObject params) {
-        CompletableFuture<JsonObject> future = new CompletableFuture<>();
+        CompletableFuture<JsonObject> pendingFuture = new CompletableFuture<>();
         WebSocket ws = this.webSocket;
         if (ws == null || !active) {
-            future.completeExceptionally(new RuntimeException("WS not connected"));
-            return future;
+            pendingFuture.completeExceptionally(new RuntimeException("WS not connected"));
+            return pendingFuture;
         }
 
         String echo = "req_" + echoCounter.incrementAndGet();
-        pendingRequests.put(echo, future);
+        pendingRequests.put(echo, pendingFuture);
 
         JsonObject payload = new JsonObject();
         payload.addProperty("action", action);
@@ -114,15 +123,11 @@ public class WSClient {
                     return null;
                 });
 
-        Thread.startVirtualThread(() -> {
-            try { Thread.sleep(10000); } catch (InterruptedException ignored) { }
-            CompletableFuture<JsonObject> f = pendingRequests.remove(echo);
-            if (f != null && !f.isDone()) {
-                f.completeExceptionally(new TimeoutException("WS action timeout: " + action));
-            }
+        pendingFuture.orTimeout(10, TimeUnit.SECONDS).whenComplete((res, ex) -> {
+            pendingRequests.remove(echo);
         });
 
-        return future;
+        return pendingFuture;
     }
 
     public void setEventListener(Consumer<String> listener) {

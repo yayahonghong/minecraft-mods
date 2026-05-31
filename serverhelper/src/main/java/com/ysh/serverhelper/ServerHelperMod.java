@@ -17,6 +17,9 @@ public class ServerHelperMod implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static ModConfigManager configManager;
     public static WSClient wsClient;
+    public static com.ysh.serverhelper.notifier.Notifier getNotifier() {
+        return new com.ysh.serverhelper.notifier.QQNotifier(configManager.getConfig().getQq(), wsClient);
+    }
 
     @Override
     public void onInitialize() {
@@ -26,6 +29,8 @@ public class ServerHelperMod implements ModInitializer {
         
         ServerI18n.init();
 
+        wsClient = new WSClient();
+
         PlayerJoinHandler.register();
         PlayerQuitHandler.register();
         PlayerDeathHandler.register();
@@ -33,7 +38,6 @@ public class ServerHelperMod implements ModInitializer {
         ChatHandler.register();
         ServerLifecycleHandler.register();
 
-        wsClient = new WSClient();
         wsClient.connect(configManager.getConfig().getQq());
         wsClient.setEventListener(json -> QQCommandHandler.handle(json, configManager.getConfig().getQq()));
 

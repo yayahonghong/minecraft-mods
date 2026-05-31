@@ -23,10 +23,10 @@ public class ServerI18n extends Language {
         try (InputStream is = ServerI18n.class.getResourceAsStream("/zh_cn.json")) {
             if (is != null) {
                 JsonObject json = new Gson().fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), JsonObject.class);
-                json.entrySet().forEach(e -> map.put(e.getKey(), e.getValue().getAsString()));
+                json.entrySet().forEach(entry -> map.put(entry.getKey(), entry.getValue().getAsString()));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.ysh.serverhelper.ServerHelperMod.LOGGER.warn("Failed to load language file zh_cn.json", e);
         }
         GLOBAL_TRANSLATIONS.putAll(map);
         Language.inject(new ServerI18n(Language.getInstance(), map));

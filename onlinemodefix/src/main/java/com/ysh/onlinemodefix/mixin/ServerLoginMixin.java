@@ -53,13 +53,19 @@ public class ServerLoginMixin {
     )
     private void onAuthThreadStart(Thread thread) {
         String name = this.requestedUsername;
-        new Thread(() -> {
+        Thread.ofVirtual().name("onlinemodefix-auth-" + name).start(() -> {
             GameProfile profile = lookupProfile(name);
             startClientVerification(profile);
-        }, "onlinemodefix-auth-" + name).start();
+        });
     }
 
     @Inject(method = "disconnect", at = @At("HEAD"), cancellable = true)
+    /**
+     * 拦截玩家登录时被服务器断开连接的事件。
+     * 当 online-mode=true 时，未通过正版验证的玩家会被踢出。
+     * 在此我们识别出验证失败的原因（如未验证通过或验证服务器宕机），
+     * 将其视为离线玩家（创建 Offline Profile）并放行，从而实现正版/离线玩家共存的“混合模式”。
+     */
     private void onDisconnect(Component reason, CallbackInfo ci) {
         var contents = reason.getContents();
         if (contents instanceof TranslatableContents tc) {

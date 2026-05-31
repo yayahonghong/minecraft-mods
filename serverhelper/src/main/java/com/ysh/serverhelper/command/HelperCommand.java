@@ -23,8 +23,8 @@ public class HelperCommand {
                             ctx.getSource().sendSuccess(() ->
                                     Component.literal("§eQQ: " + qqIcon), false);
 
-                            config.getEvents().forEach((key, ec) -> {
-                                String icon = ec.isEnabled() ? "§a✔" : "§c✘";
+                            config.getEvents().forEach((key, eventConfig) -> {
+                                String icon = eventConfig.isEnabled() ? "§a✔" : "§c✘";
                                 ctx.getSource().sendSuccess(() ->
                                         Component.literal("§e" + key + ": " + icon), false);
                             });
@@ -43,9 +43,9 @@ public class HelperCommand {
                                     .replace("{client}", "Fabric")
                                     .replace("{time}", "test");
 
-                            var n = new QQNotifier(config.getQq(), ServerHelperMod.wsClient);
-                            if (n.isEnabled()) {
-                                n.send(msg);
+                            var notifier = ServerHelperMod.getNotifier();
+                            if (notifier.isEnabled()) {
+                                notifier.send(msg);
                                 ctx.getSource().sendSuccess(() ->
                                         Component.literal("§aTest notification sent!"), false);
                             } else {
@@ -82,14 +82,14 @@ public class HelperCommand {
                                         return 1;
                                     }
 
-                                    var ec = config.getEvents().get(event);
-                                    if (ec == null) {
+                                    var eventConfig = config.getEvents().get(event);
+                                    if (eventConfig == null) {
                                         ctx.getSource().sendSuccess(() ->
                                                 Component.literal("§c未知事件: " + event), false);
                                         return 0;
                                     }
-                                    ec.setEnabled(!ec.isEnabled());
-                                    String status = ec.isEnabled() ? "§a已启用" : "§c已禁用";
+                                    eventConfig.setEnabled(!eventConfig.isEnabled());
+                                    String status = eventConfig.isEnabled() ? "§a已启用" : "§c已禁用";
                                     ctx.getSource().sendSuccess(() ->
                                             Component.literal("§e事件 " + event + ": " + status), false);
                                     ServerHelperMod.configManager.save();

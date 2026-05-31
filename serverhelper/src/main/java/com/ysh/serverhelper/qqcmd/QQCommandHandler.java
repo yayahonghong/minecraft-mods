@@ -27,17 +27,17 @@ public class QQCommandHandler {
 
     public static void handle(String jsonBody, ModConfig.QQConfig config) {
         try {
-            JsonObject obj = com.google.gson.JsonParser.parseString(jsonBody).getAsJsonObject();
+            JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonBody).getAsJsonObject();
 
-            if (!obj.has("post_type") || !"message".equals(obj.get("post_type").getAsString())) return;
-            if (!obj.has("message_type") || !"group".equals(obj.get("message_type").getAsString())) return;
-            if (!obj.has("user_id") || !obj.has("group_id") || (!obj.has("raw_message") && !obj.has("message"))) return;
+            if (!jsonObject.has("post_type") || !"message".equals(jsonObject.get("post_type").getAsString())) return;
+            if (!jsonObject.has("message_type") || !"group".equals(jsonObject.get("message_type").getAsString())) return;
+            if (!jsonObject.has("user_id") || !jsonObject.has("group_id") || (!jsonObject.has("raw_message") && !jsonObject.has("message"))) return;
 
-            long userId = obj.get("user_id").getAsLong();
-            long groupId = obj.get("group_id").getAsLong();
+            long userId = jsonObject.get("user_id").getAsLong();
+            long groupId = jsonObject.get("group_id").getAsLong();
             if (groupId != config.getGroupId()) return;
 
-            String rawMsg = obj.has("raw_message") ? obj.get("raw_message").getAsString().trim() : obj.get("message").getAsString().trim();
+            String rawMsg = jsonObject.has("raw_message") ? jsonObject.get("raw_message").getAsString().trim() : jsonObject.get("message").getAsString().trim();
             String prefix = config.getCommandPrefix();
 
             if (rawMsg.startsWith(prefix)) {
@@ -53,19 +53,19 @@ public class QQCommandHandler {
 
             String rawLower = rawMsg.toLowerCase();
             if (rawLower.equals("菜单") || rawLower.equals("帮助")) {
-                MenuSession.set(new MenuSession(userId, groupId, MENU_ITEMS));
+                MenuSessionManager.set(new MenuSession(userId, groupId, MENU_ITEMS));
                 sendToGroup(groupId, buildMenuText());
                 return;
             }
             if (rawLower.equals("取消")) {
-                if (MenuSession.hasActive(userId)) {
-                    MenuSession.remove(userId);
+                if (MenuSessionManager.hasActive(userId)) {
+                    MenuSessionManager.remove(userId);
                     sendToGroup(groupId, "已取消菜单");
                 }
                 return;
             }
 
-            MenuSession session = MenuSession.get(userId);
+            MenuSession session = MenuSessionManager.get(userId);
             if (session != null) {
                 handleMenuChoice(userId, groupId, rawMsg, config);
             }
@@ -76,15 +76,15 @@ public class QQCommandHandler {
 
     private static boolean handleBuiltinCommand(String cmd, long userId, long groupId, ModConfig.QQConfig config) {
         if (cmd.equalsIgnoreCase("cancel")) {
-            if (MenuSession.hasActive(userId)) {
-                MenuSession.remove(userId);
+            if (MenuSessionManager.hasActive(userId)) {
+                MenuSessionManager.remove(userId);
                 sendToGroup(groupId, "已取消菜单");
             }
             return true;
         }
         String action = cmd.split(" ", 2)[0].toLowerCase();
         if (action.equals("menu") || action.equals("help")) {
-            MenuSession.set(new MenuSession(userId, groupId, MENU_ITEMS));
+            MenuSessionManager.set(new MenuSession(userId, groupId, MENU_ITEMS));
             sendToGroup(groupId, buildMenuText());
             return true;
         }
@@ -97,10 +97,10 @@ public class QQCommandHandler {
             var items = MENU_ITEMS;
             if (choice >= 1 && choice <= items.size()) {
                 MenuSession.MenuItem item = items.get(choice - 1);
-                MenuSession.remove(userId);
+                MenuSessionManager.remove(userId);
 
                 if (item.action().equals("menu")) {
-                    MenuSession.set(new MenuSession(userId, groupId, MENU_ITEMS));
+                    MenuSessionManager.set(new MenuSession(userId, groupId, MENU_ITEMS));
                     sendToGroup(groupId, buildMenuText());
                     return;
                 }

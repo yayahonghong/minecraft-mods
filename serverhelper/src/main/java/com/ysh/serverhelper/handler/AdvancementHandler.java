@@ -2,7 +2,6 @@ package com.ysh.serverhelper.handler;
 
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.notifier.QQNotifier;
 import com.ysh.serverhelper.utils.ServerI18n;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.network.chat.Component;
@@ -12,7 +11,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class AdvancementHandler {
-    private static final DateTimeFormatter TF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static void register() {
         // Now handled by PlayerAdvancementsMixin (event-driven push model)
@@ -24,26 +23,26 @@ public class AdvancementHandler {
         }
 
         ModConfig config = ServerHelperMod.configManager.getConfig();
-        var ec = config.getEvents().get("advancement");
-        if (ec == null || !ec.isEnabled()) return;
+        var eventConfig = config.getEvents().get("advancement");
+        if (eventConfig == null || !eventConfig.isEnabled()) return;
         if (config.getExcludedPlayers().contains(player.getName().getString())) return;
 
         String name;
         Component titleComponent = holder.value().display().get().getTitle();
-        if (titleComponent.getContents() instanceof TranslatableContents tc) {
-            String translated = ServerI18n.get(tc.getKey());
+        if (titleComponent.getContents() instanceof TranslatableContents translatableContents) {
+            String translated = ServerI18n.get(translatableContents.getKey());
             name = translated != null ? translated : titleComponent.getString();
         } else {
             name = titleComponent.getString();
         }
-        String msg = ec.getMessage()
+        String msg = eventConfig.getMessage()
                 .replace("{player}", player.getName().getString())
                 .replace("{advancement}", name)
-                .replace("{time}", LocalDateTime.now().format(TF));
+                .replace("{time}", LocalDateTime.now().format(TIME_FORMATTER));
 
-        var n = new QQNotifier(config.getQq(), ServerHelperMod.wsClient);
-        if (n.isEnabled()) {
-            Thread.ofVirtual().start(() -> n.send(msg));
+        var notifier = ServerHelperMod.getNotifier();
+        if (notifier.isEnabled()) {
+            notifier.send(msg);
         }
     }
 }

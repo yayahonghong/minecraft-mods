@@ -32,6 +32,13 @@ public class CreeperExplosionMixin {
             target = "Lnet/minecraft/server/level/ServerLevel;explode(Lnet/minecraft/world/entity/Entity;DDDFLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
         )
     )
+    /**
+     * 拦截原版的苦力怕爆炸逻辑。
+     * 取消对 ServerLevel.explode 的调用（防止破坏地形），改为执行我们自定义的逻辑：
+     * 1. 播放标准的爆炸音效。
+     * 2. 以爆炸点为中心，根据距离手动计算并对周围实体施加爆炸伤害（线性衰减）。
+     * 3. 在爆炸位置生成一个包含特定颜色和形状配置的烟花火箭，寿命设为0以便立即引爆，用作爆炸的视觉特效。
+     */
     private void onExplode(ServerLevel world, Entity source, double x, double y, double z, float power, Level.ExplosionInteraction interaction) {
         world.playSound(null, x, y, z, SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4.0f, 1.0f);
 
@@ -51,13 +58,13 @@ public class CreeperExplosionMixin {
         }
 
         List<FireworkExplosion> explosions = new ArrayList<>();
-        IntArrayList colors1 = new IntArrayList(new int[]{0xFF0000, 0xFFD700, 0xFFFFFF});
-        IntArrayList fade1 = new IntArrayList(new int[]{0xFF8C00});
-        explosions.add(new FireworkExplosion(FireworkExplosion.Shape.LARGE_BALL, colors1, fade1, true, true));
+        IntArrayList innerColors = new IntArrayList(new int[]{0xFF0000, 0xFFD700, 0xFFFFFF});
+        IntArrayList innerFadeColors = new IntArrayList(new int[]{0xFF8C00});
+        explosions.add(new FireworkExplosion(FireworkExplosion.Shape.LARGE_BALL, innerColors, innerFadeColors, true, true));
 
-        IntArrayList colors2 = new IntArrayList(new int[]{0x00BFFF, 0x8A2BE2, 0x00FF7F});
-        IntArrayList fade2 = new IntArrayList(new int[]{0xFFFFFF});
-        explosions.add(new FireworkExplosion(FireworkExplosion.Shape.BURST, colors2, fade2, false, true));
+        IntArrayList outerColors = new IntArrayList(new int[]{0x00BFFF, 0x8A2BE2, 0x00FF7F});
+        IntArrayList outerFadeColors = new IntArrayList(new int[]{0xFFFFFF});
+        explosions.add(new FireworkExplosion(FireworkExplosion.Shape.BURST, outerColors, outerFadeColors, false, true));
 
         ItemStack stack = new ItemStack(Items.FIREWORK_ROCKET);
         stack.set(DataComponents.FIREWORKS, new Fireworks(1, explosions));
