@@ -1,0 +1,22 @@
+{
+    "schemaVersion": 1,
+    "id": "serverbot",
+    "version": "${version}",
+    "name": "ServerBot",
+    "description": "Server bot mod for AFK staying online.",
+    "authors": ["YSH"],
+    "contact": {},
+    "license": "MIT",
+    "environment": "server",
+    "entrypoints": {
+        "main": [
+            "com.ysh.serverbot.ServerBotMod"
+        ]
+    },
+    "depends": {
+        "fabricloader": ">=0.18.5",
+        "minecraft": "~26.1",
+        "java": ">=25",
+        "fabric-api": "*"
+    }
+}
