@@ -2,14 +2,9 @@ package com.ysh.serverbot.bot;
 
 import com.mojang.authlib.GameProfile;
 import com.ysh.serverbot.network.BotNetworkHandler;
-import io.netty.channel.ChannelFutureListener;
 import net.minecraft.network.Connection;
-import net.minecraft.network.DisconnectionDetails;
-import net.minecraft.network.PacketListener;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.network.ProtocolInfo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
@@ -56,7 +51,6 @@ public class BotManager {
 
         ServerLevel level = owner.level();
         MinecraftServer server = level.getServer();
-        if (server == null) return null;
 
         GameProfile profile = new GameProfile(UUID.randomUUID(), name);
 

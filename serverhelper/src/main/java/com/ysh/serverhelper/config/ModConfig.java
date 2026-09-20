@@ -6,37 +6,49 @@ import java.util.List;
 import java.util.Map;
 
 public class ModConfig {
-    private QQConfig qq = new QQConfig();
+    private AstrBotConfig astrbot = new AstrBotConfig();
     private List<String> excluded_players = new ArrayList<>();
     private Map<String, EventConfig> events = defaultEvents();
 
-    public QQConfig getQq() { return qq; }
-    public void setQq(QQConfig qq) { this.qq = qq; }
+    public AstrBotConfig getAstrbot() { return astrbot; }
+    public void setAstrbot(AstrBotConfig astrbot) { this.astrbot = astrbot; }
     public List<String> getExcludedPlayers() { return excluded_players; }
     public void setExcludedPlayers(List<String> excluded_players) { this.excluded_players = excluded_players; }
     public Map<String, EventConfig> getEvents() { return events; }
     public void setEvents(Map<String, EventConfig> events) { this.events = events; }
 
-    public static class QQConfig {
+    public static class AstrBotConfig {
         private boolean enabled = false;
-        private String api_url = "http://localhost:3000";
-        private String token = "";
-        private long group_id = 0;
+        private String base_url = "http://localhost:6185";
+        private String api_key = "";
+        private String umo = "";
+        private String bridge_url = "";
+        private String internal_token = "";
+        private int poll_interval_ms = 1500;
         private String command_prefix = "#";
-        private List<Long> admin_qq = new ArrayList<>();
+        private List<String> admin_qq = new ArrayList<>();
+        private boolean insecure_tls = false;
 
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
-        public String getApiUrl() { return api_url; }
-        public void setApiUrl(String api_url) { this.api_url = api_url; }
-        public String getToken() { return token; }
-        public void setToken(String token) { this.token = token; }
-        public long getGroupId() { return group_id; }
-        public void setGroupId(long group_id) { this.group_id = group_id; }
+        public String getBaseUrl() { return base_url; }
+        public void setBaseUrl(String base_url) { this.base_url = base_url; }
+        public String getApiKey() { return api_key; }
+        public void setApiKey(String api_key) { this.api_key = api_key; }
+        public String getUmo() { return umo; }
+        public void setUmo(String umo) { this.umo = umo; }
+        public String getBridgeUrl() { return bridge_url; }
+        public void setBridgeUrl(String bridge_url) { this.bridge_url = bridge_url; }
+        public String getInternalToken() { return internal_token; }
+        public void setInternalToken(String internal_token) { this.internal_token = internal_token; }
+        public int getPollIntervalMs() { return poll_interval_ms; }
+        public void setPollIntervalMs(int poll_interval_ms) { this.poll_interval_ms = poll_interval_ms; }
         public String getCommandPrefix() { return command_prefix; }
         public void setCommandPrefix(String command_prefix) { this.command_prefix = command_prefix; }
-        public List<Long> getAdminQq() { return admin_qq; }
-        public void setAdminQq(List<Long> admin_qq) { this.admin_qq = admin_qq; }
+        public List<String> getAdminQq() { return admin_qq; }
+        public void setAdminQq(List<String> admin_qq) { this.admin_qq = admin_qq; }
+        public boolean isInsecureTls() { return insecure_tls; }
+        public void setInsecureTls(boolean insecure_tls) { this.insecure_tls = insecure_tls; }
     }
 
     public static class EventConfig {

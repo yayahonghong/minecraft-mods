@@ -1,0 +1,5 @@
+name: mc_bridge
+desc: "Minecraft 服务器命令桥接：转发群命令给 MC 模组，并回传执行结果"
+author: "ysh"
+version: "1.0.0"
+repo: ""

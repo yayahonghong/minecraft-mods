@@ -1,10 +1,14 @@
 {
-  "qq": {
+  "astrbot": {
     "enabled": true,
-    "api_url": "http://localhost:3000",
-    "token": "",
-    "group_id": 0,
+    "base_url": "http://localhost:6185",
+    "api_key": "abk_xxx",
+    "umo": "aiocqhttp:GroupMessage:123456789",
+    "bridge_url": "",
+    "internal_token": "",
+    "poll_interval_ms": 1500,
     "command_prefix": "#",
+    "insecure_tls": false,
     "admin_qq": []
   },
   "events": {

@@ -1,0 +1,27 @@
+{
+  "group_id": {
+    "description": "绑定的群 ID（官方机器人填哈希串，如 5099B7DD...；OneBot 群填数字）",
+    "type": "string",
+    "default": ""
+  },
+  "command_prefix": {
+    "description": "命令前缀，与 MC 模组保持一致",
+    "type": "string",
+    "default": "#"
+  },
+  "listen_host": {
+    "description": "桥接 HTTP 服务监听地址（Docker 部署填 0.0.0.0）",
+    "type": "string",
+    "default": "0.0.0.0"
+  },
+  "listen_port": {
+    "description": "桥接 HTTP 服务端口",
+    "type": "int",
+    "default": 6186
+  },
+  "internal_token": {
+    "description": "内部鉴权 token，需与 MC 模组配置 internal_token 一致",
+    "type": "string",
+    "default": ""
+  }
+}

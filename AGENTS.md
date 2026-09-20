@@ -51,14 +51,16 @@ minecraft-mods/
 - 示例配置: `serverhelper/config/serverhelper.json.example`
 - Mod 使用 Gson 序列化/反序列化配置（`ModConfig` + `ModConfigManager`）
 - 事件类型使用 `LinkedHashMap` 保证顺序
-- QQ 配置：`api_url`（NapCat 地址）、`token`、`group_id`、`command_prefix`、`admin_qq`
+- AstrBot 配置（`astrbot` 段）：`base_url`（OpenAPI 地址）、`api_key`（abk_ 开头）、`umo`（如 `aiocqhttp:GroupMessage:群号`）、`bridge_url`（mc_bridge 插件地址）、`internal_token`、`poll_interval_ms`、`command_prefix`、`admin_qq`
+- 旧 NapCat `qq` 配置段会在 load 时自动迁移为 `astrbot` 段（group_id 转 umo，其余敏感项需手动补）
 
 ## 模组架构
 
 - **入口**: `com.ysh.serverhelper.ServerHelperMod` (ModInitializer)
 - **事件处理器**: 每个事件一个独立 Handler 类（`PlayerJoinHandler`, `PlayerDeathHandler` 等），通过静态 `register()` 方法注册
-- **QQ 通知**: `Notifier` + `QQNotifier` 通过 `QQWSClient.sendAction` 走 WebSocket 发送
-- **QQ 命令**: `QQWSClient` WebSocket 接收 NapCat 事件 + `QQCommandHandler` 处理指令
+- **QQ 通知**: `Notifier` + `AstrBotNotifier` 通过 `AstrBotClient.sendImMessage` 调 AstrBot OpenAPI（`POST /api/v1/im/messages`，Bearer abk_ API Key）
+- **QQ 命令**: `AstrBotPoller`（虚拟线程）出站长轮询 mc_bridge 插件 `GET /mc/poll` 拉取群命令，`server.execute` 回主线程交 `QQCommandHandler.handle`（返回应答文本），再 `POST /mc/reply` 回传给插件由插件回复到群
+- **mc_bridge 插件**: `serverhelper/mc_bridge/`（Python，部署到 VPS 的 AstrBot `data/plugins/`），内存队列 + aiohttp 服务
 - **Mixin**: `PlayerAdvancementsMixin` — 成就监听通过 Mixin 实现
 - **国际化**: `ServerI18n` 加载 `zh_cn.json` 将死讯/成就翻译为中文
 - **命令**: `/helper list|toggle|test|reload` 通过 Fabric API Command API 注册

@@ -2,7 +2,6 @@ package com.ysh.serverhelper.command;
 
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.notifier.QQNotifier;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;
@@ -19,9 +18,9 @@ public class HelperCommand {
                             ctx.getSource().sendSuccess(() ->
                                     Component.literal("§6=== ServerHelper Status ==="), false);
 
-                            String qqIcon = config.getQq().isEnabled() ? "§a✔" : "§c✘";
+                            String qqIcon = config.getAstrbot().isEnabled() ? "§a✔" : "§c✘";
                             ctx.getSource().sendSuccess(() ->
-                                    Component.literal("§eQQ: " + qqIcon), false);
+                                    Component.literal("§eAstrBot: " + qqIcon), false);
 
                             config.getEvents().forEach((key, eventConfig) -> {
                                 String icon = eventConfig.isEnabled() ? "§a✔" : "§c✘";
@@ -66,18 +65,18 @@ public class HelperCommand {
                                 .suggests((ctx, builder) -> {
                                     ModConfig config = ServerHelperMod.configManager.getConfig();
                                     config.getEvents().keySet().forEach(builder::suggest);
-                                    builder.suggest("qq");
+                                    builder.suggest("astrbot");
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> {
                                     String event = StringArgumentType.getString(ctx, "event");
                                     ModConfig config = ServerHelperMod.configManager.getConfig();
 
-                                    if ("qq".equals(event)) {
-                                        config.getQq().setEnabled(!config.getQq().isEnabled());
-                                        String status = config.getQq().isEnabled() ? "§a已启用" : "§c已禁用";
+                                    if ("astrbot".equals(event)) {
+                                        config.getAstrbot().setEnabled(!config.getAstrbot().isEnabled());
+                                        String status = config.getAstrbot().isEnabled() ? "§a已启用" : "§c已禁用";
                                         ctx.getSource().sendSuccess(() ->
-                                                Component.literal("§eQQ 通知: " + status), false);
+                                                Component.literal("§eAstrBot 通知: " + status), false);
                                         ServerHelperMod.configManager.save();
                                         return 1;
                                     }

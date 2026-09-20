@@ -1,17 +1,18 @@
 package com.ysh.serverhelper.qqcmd;
 
-import com.google.gson.JsonObject;
 import com.ysh.serverhelper.ServerHelperMod;
 import com.ysh.serverhelper.config.ModConfig;
-import com.ysh.serverhelper.ws.WSClient;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * QQ 命令处理（AstrBot 版）。
+ * 由 AstrBotPoller 在 Minecraft 主线程调用，输入原始消息文本，返回应答文本。
+ */
 public class QQCommandHandler {
     private static MinecraftServer server;
-    private static WSClient wsClient;
 
     private static final List<MenuSession.MenuItem> MENU_ITEMS = List.of(
             new MenuSession.MenuItem("👥 在线玩家", "list"),
@@ -20,78 +21,79 @@ public class QQCommandHandler {
             new MenuSession.MenuItem("🔄 刷新菜单", "menu")
     );
 
-    public static void init(MinecraftServer mcServer, WSClient client) {
+    public static void init(MinecraftServer mcServer) {
         server = mcServer;
-        wsClient = client;
     }
 
-    public static void handle(String jsonBody, ModConfig.QQConfig config) {
+    public static MinecraftServer getServer() {
+        return server;
+    }
+
+    /**
+     * 处理一条来自 QQ 群的消息。
+     *
+     * @param rawMsg 消息原文
+     * @param userId 发送者 QQ 号
+     * @param config AstrBot 配置
+     * @return 需要回复到群里的文本；返回 null 表示无需回复
+     */
+    public static String handle(String rawMsg, String userId, ModConfig.AstrBotConfig config) {
         try {
-            JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonBody).getAsJsonObject();
-
-            if (!jsonObject.has("post_type") || !"message".equals(jsonObject.get("post_type").getAsString())) return;
-            if (!jsonObject.has("message_type") || !"group".equals(jsonObject.get("message_type").getAsString())) return;
-            if (!jsonObject.has("user_id") || !jsonObject.has("group_id") || (!jsonObject.has("raw_message") && !jsonObject.has("message"))) return;
-
-            long userId = jsonObject.get("user_id").getAsLong();
-            long groupId = jsonObject.get("group_id").getAsLong();
-            if (groupId != config.getGroupId()) return;
-
-            String rawMsg = jsonObject.has("raw_message") ? jsonObject.get("raw_message").getAsString().trim() : jsonObject.get("message").getAsString().trim();
+            rawMsg = rawMsg.trim();
             String prefix = config.getCommandPrefix();
 
             if (rawMsg.startsWith(prefix)) {
                 String cmd = rawMsg.substring(prefix.length()).trim();
-                if (cmd.isEmpty()) return;
+                if (cmd.isEmpty()) return null;
 
-                if (handleBuiltinCommand(cmd, userId, groupId, config)) return;
+                String builtin = handleBuiltinCommand(cmd, userId);
+                if (builtin != null) return builtin;
+
                 boolean isAdmin = config.getAdminQq().contains(userId);
-                String response = executeCommand(cmd, isAdmin);
-                sendToGroup(groupId, response);
-                return;
+                return executeCommand(cmd, isAdmin);
             }
 
             String rawLower = rawMsg.toLowerCase();
             if (rawLower.equals("菜单") || rawLower.equals("帮助")) {
-                MenuSessionManager.set(new MenuSession(userId, groupId, MENU_ITEMS));
-                sendToGroup(groupId, buildMenuText());
-                return;
+                MenuSessionManager.set(new MenuSession(userId, "", MENU_ITEMS));
+                return buildMenuText();
             }
             if (rawLower.equals("取消")) {
                 if (MenuSessionManager.hasActive(userId)) {
                     MenuSessionManager.remove(userId);
-                    sendToGroup(groupId, "已取消菜单");
+                    return "已取消菜单";
                 }
-                return;
+                return null;
             }
 
             MenuSession session = MenuSessionManager.get(userId);
             if (session != null) {
-                handleMenuChoice(userId, groupId, rawMsg, config);
+                return handleMenuChoice(userId, rawMsg, config);
             }
+            return null;
         } catch (Exception e) {
             ServerHelperMod.LOGGER.warn("QQ command handler error", e);
+            return "命令处理出错";
         }
     }
 
-    private static boolean handleBuiltinCommand(String cmd, long userId, long groupId, ModConfig.QQConfig config) {
+    private static String handleBuiltinCommand(String cmd, String userId) {
         if (cmd.equalsIgnoreCase("cancel")) {
             if (MenuSessionManager.hasActive(userId)) {
                 MenuSessionManager.remove(userId);
-                sendToGroup(groupId, "已取消菜单");
+                return "已取消菜单";
             }
-            return true;
+            return null;
         }
         String action = cmd.split(" ", 2)[0].toLowerCase();
         if (action.equals("menu") || action.equals("help")) {
-            MenuSessionManager.set(new MenuSession(userId, groupId, MENU_ITEMS));
-            sendToGroup(groupId, buildMenuText());
-            return true;
+            MenuSessionManager.set(new MenuSession(userId, "", MENU_ITEMS));
+            return buildMenuText();
         }
-        return false;
+        return null;
     }
 
-    private static void handleMenuChoice(long userId, long groupId, String rawMsg, ModConfig.QQConfig config) {
+    private static String handleMenuChoice(String userId, String rawMsg, ModConfig.AstrBotConfig config) {
         try {
             int choice = Integer.parseInt(rawMsg.trim());
             var items = MENU_ITEMS;
@@ -100,19 +102,17 @@ public class QQCommandHandler {
                 MenuSessionManager.remove(userId);
 
                 if (item.action().equals("menu")) {
-                    MenuSessionManager.set(new MenuSession(userId, groupId, MENU_ITEMS));
-                    sendToGroup(groupId, buildMenuText());
-                    return;
+                    MenuSessionManager.set(new MenuSession(userId, "", MENU_ITEMS));
+                    return buildMenuText();
                 }
 
                 boolean isAdmin = config.getAdminQq().contains(userId);
-                String response = executeCommand(item.action(), isAdmin);
-                sendToGroup(groupId, response);
+                return executeCommand(item.action(), isAdmin);
             } else {
-                sendToGroup(groupId, "无效选项（请输入 1-" + items.size() + "），回复「取消」退出");
+                return "无效选项（请输入 1-" + items.size() + "），回复「取消」退出";
             }
         } catch (NumberFormatException e) {
-            sendToGroup(groupId, "请输入有效编号，回复「取消」退出菜单");
+            return "请输入有效编号，回复「取消」退出菜单";
         }
     }
 
@@ -174,12 +174,5 @@ public class QQCommandHandler {
             sb.append("[").append(i + 1).append("] ").append(MENU_ITEMS.get(i).label()).append("\n");
         }
         return sb.toString().stripTrailing();
-    }
-
-    private static void sendToGroup(long groupId, String text) {
-        JsonObject params = new JsonObject();
-        params.addProperty("group_id", groupId);
-        params.addProperty("message", text);
-        wsClient.sendAction("send_group_msg", params);
     }
 }
