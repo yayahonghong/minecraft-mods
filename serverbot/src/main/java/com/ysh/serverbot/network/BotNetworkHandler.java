@@ -59,8 +59,8 @@ import net.minecraft.network.protocol.game.ServerboundSetJigsawBlockPacket;
 import net.minecraft.network.protocol.game.ServerboundSetStructureBlockPacket;
 import net.minecraft.network.protocol.game.ServerboundSetTestBlockPacket;
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket;
-import net.minecraft.network.protocol.game.ServerboundSpectateEntityPacket;
-import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundPunchPacket;
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket;
 import net.minecraft.network.protocol.game.ServerboundTeleportToEntityPacket;
 import net.minecraft.network.protocol.game.ServerboundTestInstanceBlockActionPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
@@ -242,7 +242,7 @@ public class BotNetworkHandler extends ServerGamePacketListenerImpl {
     }
 
     @Override
-    public void handleAnimate(ServerboundSwingPacket packet) {
+    public void handlePunch(ServerboundPunchPacket packet) {
     }
 
     @Override
@@ -266,7 +266,7 @@ public class BotNetworkHandler extends ServerGamePacketListenerImpl {
     }
 
     @Override
-    public void handleSpectateEntity(ServerboundSpectateEntityPacket packet) {
+    public void handleSpectatorAction(ServerboundSpectatorActionPacket packet) {
     }
 
     @Override

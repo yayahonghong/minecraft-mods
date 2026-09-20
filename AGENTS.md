@@ -97,8 +97,8 @@ minecraft-mods/
 
 | 组件 | 版本 |
 |---|---|
-| Minecraft | 26.1 |
-| Fabric Loader | >= 0.18.5（实际 0.19.2） |
-| Fabric API | 0.149.0+26.1.2 |
+| Minecraft | 26.3 |
+| Fabric Loader | >= 0.19.5（实际 0.19.5） |
+| Fabric API | 0.161.0+26.3 |
 | Fabric Loom | 1.16-SNAPSHOT |
 | Java | >= 25 |

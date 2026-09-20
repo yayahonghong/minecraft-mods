@@ -18,7 +18,7 @@ public class AdvancementHandler {
     }
 
     public static void onAdvancementGranted(ServerPlayer player, AdvancementHolder holder) {
-        if (holder.value().display().isEmpty() || !holder.value().display().get().shouldAnnounceChat()) {
+        if (holder.value().display().isEmpty() || !holder.value().display().get().announceToChat()) {
             return; // Skip hidden/system advancements and recipes
         }
 
@@ -28,7 +28,7 @@ public class AdvancementHandler {
         if (config.getExcludedPlayers().contains(player.getName().getString())) return;
 
         String name;
-        Component titleComponent = holder.value().display().get().getTitle();
+        Component titleComponent = holder.value().display().get().title();
         if (titleComponent.getContents() instanceof TranslatableContents translatableContents) {
             String translated = ServerI18n.get(translatableContents.getKey());
             name = translated != null ? translated : titleComponent.getString();
